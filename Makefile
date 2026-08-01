@@ -137,6 +137,11 @@ sandbox-up: scripts-exec ## Sandbox: provisiona e espera os nos ficarem saudavei
 sandbox-down: scripts-exec ## Sandbox: destroi tudo (RODE SEMPRE ao terminar)
 	./scripts/sandbox.sh descer
 
+qrcode: ## Sandbox: gera o QR do chat para a plateia escanear
+	@URL=$$(terraform -chdir=infra/terraform-sandbox output -raw chat_url 2>/dev/null); \
+	if [ -z "$$URL" ]; then echo "nenhum ambiente provisionado (rode: make sandbox-up)"; exit 1; fi; \
+	.venv/bin/python scripts/qrcode.py "$$URL"
+
 sandbox-urls: scripts-exec ## Sandbox: reimprime os enderecos do ambiente
 	./scripts/sandbox.sh urls
 

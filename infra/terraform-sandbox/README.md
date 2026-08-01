@@ -186,6 +186,54 @@ curl -s "$SALAVIVA_LB_URL/api/rooms/geral/messages" | python3 -c \
 
 ---
 
+## Colocar a turma inteira no chat
+
+A demonstração muda de patamar quando não são três abas suas, e sim trinta
+celulares. Cada pessoa vê um `node_id` diferente no cabeçalho; quando você
+derruba um nó, parte da sala **sente** a reconexão em vez de assistir a você
+descrevê-la.
+
+```bash
+make qrcode          # gera o QR da URL atual do ALB
+open docs/img/qrcode-chat.html    # página de tela cheia, pronta para projetar
+```
+
+Gera três arquivos em `docs/img/`: `.png` para colar no slide, `.svg` que não
+pixeliza no projetor, e `.html` para projetar direto.
+
+**Refaça o QR a cada `sandbox-up`**: o DNS do ALB muda a cada recriação, e um QR
+antigo aponta para um endereço que não existe mais.
+
+### Por que o link não abre no celular (e o QR ajuda)
+
+O ALB serve **apenas HTTP**. Não há HTTPS porque um certificado ACM exige um
+domínio que você controle, e a sandbox não permite registrar domínios no
+Route 53.
+
+Navegadores móveis modernos tentam **HTTPS primeiro** quando alguém digita um
+endereço. Como a porta 443 está fechada, a tentativa morre em timeout — às vezes
+sem sequer oferecer o fallback para HTTP. É por isso que o link "não funciona no
+celular" mas funciona no seu computador, onde o navegador já visitou a URL em
+HTTP.
+
+O QR carrega o esquema `http://` explícito, então o navegador abre o que está
+codificado em vez de adivinhar. Ainda assim, avise a turma: *"é http, sem s; se
+aparecer aviso de conexão não segura, pode prosseguir"*.
+
+Se quiser HTTPS de verdade para a apresentação, a saída prática é um túnel:
+
+```bash
+brew install cloudflared
+cloudflared tunnel --url http://SEU-ALB.us-east-1.elb.amazonaws.com
+```
+
+Ele devolve uma URL `https://algo.trycloudflare.com` que funciona em qualquer
+celular sem aviso. O backend continua na AWS — o túnel só termina o TLS. Gere o
+QR a partir dessa URL. Custo: uma dependência a mais para falhar ao vivo, então
+teste antes e mantenha o endereço HTTP como plano B.
+
+---
+
 ## Encerrar a sessão — leia isto
 
 O orçamento é de **US$ 20 no total, sem reposição**. Se acabar, a conta é
