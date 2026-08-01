@@ -128,6 +128,27 @@ otimização — é o que faz a garantia valer.
 > estável em torno de 7 ms. Acima de ~5.000 entregas/s nesse arranjo o conjunto satura
 > — o limite é da máquina de teste, não da arquitetura.
 
+### Verificado também na AWS real
+
+O sistema foi implantado e exercitado em três instâncias EC2 sob Auto Scaling,
+atrás de um Application Load Balancer. **Duas instâncias foram encerradas ao vivo**
+com `aws ec2 terminate-instances`:
+
+| Verificação | Resultado |
+|---|---|
+| Ordem idêntica entre clientes em instâncias distintas | **sim** — 30 mensagens, contíguas 1–30 |
+| Nó sumiu do registro após a queda | **t+13 s** (TTL do heartbeat: ninguém notificou a morte) |
+| Auto Scaling repôs a capacidade | **t+211 s** |
+| Mensagens perdidas nas duas quedas | **zero** — histórico contíguo em ambas |
+| Cliente na instância substituta recuperou o backlog | **30 de 30 mensagens** |
+| `seq` após a falha | continuou em **31**, não regrediu |
+
+O detalhe que mais convence: o cliente que recuperou o histórico estava conectado
+a uma instância **criada pelo Auto Scaling depois** de aquelas mensagens terem
+sido enviadas. Ela nunca as viu passar — leu tudo do armazenamento durável.
+
+Detalhes e a leitura completa em [`docs/SDD.md` §10.5](docs/SDD.md).
+
 ---
 
 ## Estrutura

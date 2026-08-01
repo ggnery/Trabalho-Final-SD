@@ -145,6 +145,45 @@ cronometrado de demonstração com perguntas de arguição preparadas.
 | Ordem total sob carga | **120/120 salas, 0 divergências** |
 | Perda ao derrubar um nó | **0 mensagens** (verificado em e2e) |
 
+## Operações — deploy real na AWS Academy Sandbox
+
+Executado de fato, e foi onde apareceram os defeitos mais caros. Nenhum deles
+teria surgido sem rodar no ambiente real.
+
+**Quatro bloqueios da sandbox**, que motivaram a variante `infra/terraform-sandbox/`:
+ElastiCache e ECR não liberados, IAM read-only, e KMS só com listagem. Já
+previstos ao ler o tutorial do ambiente.
+
+**Três que só apareceram aplicando:**
+
+1. `LabInstanceProfile` não existe na sandbox Cloud Architecting — é do Learner Lab.
+2. A sandbox **nega `iam:PassRole`**: nenhuma profile pode ser anexada ao Auto
+   Scaling, qualquer que seja. Sem credencial não há DynamoDB, e sem DynamoDB não
+   há replay — que é a prova central do critério EC3. Resolvido com DynamoDB
+   Local em contêiner ao lado do Redis (ADR registrado em `variables.tf`).
+3. O IP privado fixo do Redis colidia na recriação, porque o
+   `create_before_destroy` do ASG **se propaga** para tudo de que ele depende.
+
+**Dois defeitos nossos, que teriam falhado ao vivo:**
+
+4. O `kill_node.sh` reportou "cluster caiu para 0 nós" e "restabelecida em
+   t+11s". Ambos falsos: uma requisição HTTP perdida era lida como "zero nós", e
+   o quórum era declarado olhando só a contagem — que nunca caía, porque o
+   heartbeat do nó morto leva 15 s para expirar. Corrigido; as medições reais
+   passaram a ser t+13s / t+211s / t+211s.
+
+5. **O stickiness do ALB apagava a evidência de distribuição.** Duas abas do
+   mesmo navegador caíam sempre no mesmo nó, porque compartilham o cookie
+   `AWSALB`. É o mesmo defeito do `ip_hash` no nginx, por outro caminho — e a
+   correção anterior tratou só o balanceador local. Desligado nas duas
+   infraestruturas. A lição foi registrada no ADR-007: *"não depender de
+   afinidade" só vale se nenhuma camada a impuser*.
+
+**Resultado da validação na nuvem** (ver `docs/SDD.md` §10.5): 3 nós EC2,
+30 mensagens com ordem idêntica entre clientes, **duas instâncias derrubadas ao
+vivo**, zero mensagens perdidas, e o cliente conectado à instância substituta
+recuperando as 30 mensagens do backlog — de uma instância que nunca as viu passar.
+
 ## O que ficou por fazer
 
 - Deploy real na AWS não foi executado (exige credenciais do time). O Terraform

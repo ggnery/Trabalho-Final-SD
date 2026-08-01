@@ -2048,7 +2048,63 @@ A mitigação para as duas é a mesma e está registrada em trabalhos futuros
 (§14.16): **Redis Streams (`XADD`)**, que faz o append durável e a atribuição de
 ID em **uma única operação atômica**, eliminando ambas as janelas por construção.
 
-### 10.5 O que a arquitetura *não* precisa fazer sob falha
+### 10.5 Execução real na AWS — o critério EC3 verificado, não afirmado
+
+Tudo o que as seções anteriores descrevem foi **executado contra o ambiente real
+na AWS**, e não apenas raciocinado. O registro abaixo é o que se projeta na
+apresentação.
+
+**Ambiente:** três instâncias EC2 `t3.micro` em Auto Scaling Group, atrás de um
+Application Load Balancer, com Redis em instância dedicada. Cada nó se
+identifica pelo **ID real da instância** (`i-0aa9e6bb05ad4f540`,
+`i-0d495b5f902663538`, …), que é o mesmo identificador visível no console da
+EC2 — de modo que a instância derrubada é literalmente a que some do painel.
+
+**Comunicação em grupo e ordenação (FR-4, FR-5):**
+
+| Verificação | Resultado |
+|---|---|
+| 30 mensagens, 3 clientes em instâncias distintas | todos receberam as 30 |
+| Ordem observada por cada cliente | **idêntica** |
+| Sequência | **contígua, 1 a 30** |
+| Origem das mensagens | instâncias EC2 distintas |
+| Relógio de Lamport | avançou de 1 a 59 |
+
+**Tolerância a falhas (FR-8, critério EC3):** duas instâncias foram encerradas
+ao vivo com `aws ec2 terminate-instances`.
+
+| Marco | Medido | Explicação |
+|---|---|---|
+| **T1** · nó sumiu de `/api/nodes` | **t+13 s** | Corresponde ao TTL de 15 s do heartbeat: ninguém notificou a morte, o registro simplesmente expirou |
+| **T2** · substituto apareceu | **t+211 s** | Auto Scaling detecta, provisiona, a instância boota e constrói a imagem |
+| **T3** · capacidade restabelecida | **t+211 s** | Três nós de novo, incluindo o novo `node_id` |
+
+**A prova de não-perda**, após as duas quedas:
+
+- As 30 mensagens permaneceram íntegras e contíguas nas duas vezes.
+- Um cliente conectado à **instância substituta** — criada pelo ASG, que não
+  existia quando as mensagens foram enviadas — recebeu o backlog completo das 30.
+- As mensagens seguintes continuaram do `seq 31`, e não do 1: **o sequenciador
+  não regrediu**, porque vive no Redis e não no nó que morreu.
+- Estado final: 35 mensagens, contíguas de 1 a 35.
+
+**Sobre os 211 segundos.** É o tempo com a imagem sendo construída na própria
+instância (`git clone` + `docker build` numa `t3.micro`). Publicando a imagem em
+um registro e usando `docker pull`, a reposição cai para cerca de um minuto. A
+diferença não é arquitetural — é o custo de compilar em uma máquina pequena — mas
+importa na apresentação, porque três minutos e meio de silêncio são muito tempo
+com a banca olhando.
+
+**Uma observação que vale a arguição.** Durante o período de carência do health
+check, o Auto Scaling reporta a instância substituta como `InService / Healthy`
+**antes** de a aplicação estar de pé. Ou seja: o veredito do ASG não é evidência
+de que o serviço voltou. O que prova a recuperação é o `node_id` novo aparecer em
+`/api/nodes`, porque isso só acontece depois que o processo subiu, conectou ao
+Redis e publicou o primeiro heartbeat. A distinção entre "a infraestrutura diz
+que está pronta" e "o serviço respondeu" é exatamente o que separa `/healthz` de
+`/readyz` (§5).
+
+### 10.6 O que a arquitetura *não* precisa fazer sob falha
 
 Vale registrar, porque a ausência é a evidência do bom desenho:
 
