@@ -112,9 +112,27 @@ resource "aws_lb_target_group" "app" {
   # mesmo host em um único nó, o que apagaria a evidência de distribuição na
   # demonstração.
   # ---------------------------------------------------------------------
+  # Stickiness DESLIGADO — decisão medida, não teórica.
+  #
+  # O sistema não depende de afinidade de sessão (ADR-007): a conexão WebSocket
+  # não migra depois de estabelecida, o JWT é stateless, e ao reconectar o
+  # cliente refaz `join` com o seu last_seq e recupera o backlog em qualquer nó,
+  # porque o `seq` vive no Redis e o histórico no DynamoDB.
+  #
+  # Com stickiness ligado, o ALB grava o cookie AWSALB e passa a mandar TODAS as
+  # requisições daquele navegador para o mesmo alvo. Como abas de um mesmo
+  # navegador compartilham o pote de cookies, abrir duas abas do chat cai no
+  # mesmo nó — e a evidência visual de distribuição, que é o ponto da
+  # demonstração, desaparece. Medido:
+  #
+  #   sem cookie  -> 6 requisições, 3 nós distintos
+  #   com cookie  -> 4 requisições, 1 nó só
+  #
+  # É o mesmo defeito que o `ip_hash` causava no balanceador local (nginx.conf),
+  # por um caminho diferente.
   stickiness {
     type            = "lb_cookie"
-    enabled         = true
+    enabled         = false
     cookie_duration = 3600
   }
 

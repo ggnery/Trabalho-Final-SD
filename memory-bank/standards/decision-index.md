@@ -153,6 +153,10 @@ Registro das decisões estruturais do SalaViva. Cada entrada segue o formato Con
 
 **Correção após medição.** A configuração local usava `ip_hash` como "equivalente do stickiness". Um teste de carga revelou o defeito: como todo tráfego do host chega ao nginx com o mesmo IP de origem (o gateway da rede bridge do Docker), **273 de 273 conexões foram para um único nó**, com p95 de 25 s enquanto dois nós ficavam ociosos. Pior, três abas do navegador na mesma máquina exibiriam o mesmo `node_id` — apagando justamente a evidência visual de distribuição que a demonstração precisa mostrar. Trocado por `least_conn`, que distribui pela contagem de conexões ativas — a métrica adequada quando as conexões têm durações muito desiguais.
 
+**O mesmo defeito reapareceu no ALB.** A correção acima tratou só o balanceador local. Na AWS, o `stickiness` por cookie (`lb_cookie`) produzia o mesmo efeito por um caminho diferente: o ALB grava o cookie `AWSALB`, e **abas de um mesmo navegador compartilham o pote de cookies** — então abrir duas abas do chat caía sempre no mesmo nó. Medido no ambiente real: sem cookie, 6 requisições atingiram 3 nós; com cookie, 4 de 4 foram para um só. Stickiness foi desligado também no ALB, nas duas infraestruturas. Depois disso, 2 conexões WebSocket caem em 2 nós distintos e 6 caem nos 3.
+
+A lição que fica registrada: "não depender de afinidade" só vale se **nenhuma** camada a impuser. Bastou uma — primeiro o `ip_hash`, depois o cookie — para apagar a evidência de distribuição.
+
 **Consequências.**
 - (+) Conexões distribuídas de fato entre os nós; a demonstração mostra `node_id` distintos.
 - (+) Após a morte de um nó, os clientes órfãos se espalham pelos sobreviventes em vez de se concentrarem.
