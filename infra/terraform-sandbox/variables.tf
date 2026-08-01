@@ -110,20 +110,69 @@ variable "instance_profile" {
   description = <<-EOT
     Nome de uma instance profile JÁ EXISTENTE a anexar às instâncias.
 
-    A sandbox provê `LabInstanceProfile` (vinculada à `LabRole`) e **não permite
-    criar novas** — IAM é read-only. É essa profile que dá às instâncias acesso
-    ao DynamoDB.
+    IAM é read-only na sandbox: não dá para criar a role de menor privilégio que
+    a infraestrutura de referência cria. Só resta reaproveitar uma das que já
+    existem, e o que existe varia conforme o tipo de sandbox:
 
-    Deixe vazio ("") se a sua sandbox não tiver essa profile. Nesse caso o
-    Terraform desliga a persistência automaticamente: o chat continua
-    funcionando em tempo real (o Pub/Sub não depende do DynamoDB), mas o replay
-    de histórico na reconexão fica indisponível — e a prova de "zero mensagens
-    perdidas" passa a depender só da continuidade do `seq`.
+      - Learner Lab           -> LabInstanceProfile
+      - Cloud Architecting    -> EMR_EC2_DefaultRole, myS3Role
 
-    Confira o nome com:  aws iam list-instance-profiles --query 'InstanceProfiles[].InstanceProfileName'
+    O padrão é `EMR_EC2_DefaultRole` porque é a única, entre as disponíveis na
+    Cloud Architecting, cuja policy (`AmazonElasticMapReduceforEC2Role`) concede
+    `dynamodb:*` — e sem acesso ao DynamoDB o replay de histórico não funciona.
+
+    DIVERGÊNCIA DECLARADA: usar a role do EMR num chat é semanticamente errado e
+    concede muito mais do que o necessário (S3, Kinesis, SQS além do DynamoDB).
+    É o oposto do menor privilégio. A infraestrutura de referência
+    (`infra/terraform/`) cria uma policy com exatamente três ações no DynamoDB;
+    aqui isso é impossível, porque criar policies exige permissão que a sandbox
+    não concede. Se perguntarem na banca, esta é a resposta — e ela é sobre a
+    restrição do ambiente, não sobre desleixo no projeto.
+
+    Descubra o que a SUA sandbox oferece com:
+      aws iam list-instance-profiles --query 'InstanceProfiles[].InstanceProfileName' --output text
+
+    O PADRÃO É VAZIO porque a sandbox Cloud Architecting nega `iam:PassRole`:
+    mesmo existindo profiles, o Auto Scaling recusa o Launch Template com
+    "AccessDenied: You are not authorized to use launch template". Com
+    `dynamodb_local = true` (o padrão) isso não é problema — o histórico não
+    precisa de credencial nenhuma.
+
+    Só preencha se a sua sandbox permitir PassRole E você quiser usar o
+    DynamoDB gerenciado.
   EOT
   type        = string
-  default     = "LabInstanceProfile"
+  default     = ""
+}
+
+variable "dynamodb_local" {
+  description = <<-EOT
+    Roda o DynamoDB Local em contêiner, ao lado do Redis, em vez de usar o
+    serviço gerenciado.
+
+    POR QUE É O PADRÃO NA SANDBOX
+
+    Escrever no DynamoDB gerenciado a partir de uma EC2 exige uma instance
+    profile. A sandbox Cloud Architecting nega `iam:PassRole`, então o Auto
+    Scaling recusa qualquer Launch Template que tenha uma profile anexada — não
+    há como dar credencial às instâncias.
+
+    Restavam duas saídas: desligar a persistência, ou hospedar o armazenamento.
+    Desligar custaria caro na demonstração: sem histórico, o cliente que
+    reconecta após a queda de um nó não recebe o backlog, e a prova de "zero
+    mensagens perdidas" — o ponto central do critério EC3 — deixaria de ser
+    demonstrável.
+
+    O DynamoDB Local é a mesma API, com o mesmo modelo de chave
+    `(room_id, seq)` e a mesma Query de replay. O que se perde é durabilidade
+    real e escala; o que se preserva é exatamente o que a demonstração precisa
+    provar. É o mesmo componente que o `docker-compose.yml` usa localmente.
+
+    Defina `false` se a sua sandbox permitir PassRole — aí vale usar o serviço
+    gerenciado, que é o que a infraestrutura de referência faz.
+  EOT
+  type        = bool
+  default     = true
 }
 
 variable "persistencia_habilitada" {

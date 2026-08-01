@@ -99,19 +99,24 @@ precisa() { command -v "$1" >/dev/null 2>&1 || morrer "comando obrigatório ause
 
 agora() { date +%s; }
 
-# Lê GET /api/nodes e devolve os node_id, um por linha. Silencioso em caso de
-# falha: durante a janela de indisponibilidade é normal a consulta falhar, e
-# isso não deve abortar o script (que é justamente quem mede essa janela).
+# Lê GET /api/nodes e devolve os node_id, um por linha.
+#
+# Devolve 1 se a CONSULTA falhou, e 0 com saída vazia se o cluster respondeu
+# dizendo que não há nenhum nó. A distinção é essencial e já custou caro: a
+# versão anterior tratava as duas situações como "zero nós", e uma requisição
+# perdida durante a janela de falha — que é exatamente quando elas se perdem —
+# era reportada como "o cluster caiu para 0 nós". O script inventava uma queda
+# total que nunca aconteceu, na frente da banca.
 consultar_nos() {
-  local url="$1"
-  curl -fsS --max-time 4 "${url}/api/nodes" 2>/dev/null \
-    | python3 -c 'import json,sys
+  local url="$1" corpo
+  corpo="$(curl -fsS --max-time 4 "${url}/api/nodes" 2>/dev/null)" || return 1
+  printf '%s' "$corpo" | python3 -c 'import json,sys
 try:
     dados = json.load(sys.stdin)
 except Exception:
-    sys.exit(0)
+    sys.exit(1)
 for no in dados.get("nodes", []):
-    print(no.get("node_id", "?"))' 2>/dev/null || true
+    print(no.get("node_id", "?"))' 2>/dev/null || return 1
 }
 
 # Snapshot legível do cluster: node_id, conexões e mensagens publicadas.
@@ -212,7 +217,7 @@ modo_local() {
   printf '\n'
 
   local nos_antes total_antes
-  nos_antes="$(consultar_nos "$url_obs")"
+  nos_antes="$(consultar_nos "$url_obs")" || true
   total_antes="$(grep -c . <<<"$nos_antes" || true)"
   printf '%s\n' "${NEG}  Cluster ANTES da falha (${total_antes} nós):${FIM}"
   tabela_nos "$url_obs"
@@ -241,7 +246,12 @@ modo_local() {
   local decorrido restantes
   while :; do
     decorrido=$(( $(agora) - t0 ))
-    restantes="$(consultar_nos "$url_obs")"
+    if ! restantes="$(consultar_nos "$url_obs")"; then
+      printf '\r  %s t+%-4ss sem resposta do balanceador · aguardando...   ' "${CINZ}·${FIM}" "$decorrido"
+      (( decorrido > LIMITE )) && { printf '\n'; aviso "Tempo limite sem resposta."; break; }
+      sleep "$INTERVALO"
+      continue
+    fi
     if ! grep -qx "$ALVO" <<<"$restantes"; then
       T_DETECCAO="t+${decorrido}s"
       ok "$(printf "'%s' sumiu de /api/nodes em ${NEG}t+%ss${FIM}. Nós restantes: %s" \
@@ -275,7 +285,12 @@ modo_local() {
   local recuperado=0
   while :; do
     decorrido=$(( $(agora) - t0 ))
-    restantes="$(consultar_nos "$url_obs")"
+    if ! restantes="$(consultar_nos "$url_obs")"; then
+      printf '\r  %s t+%-4ss sem resposta do balanceador · aguardando...   ' "${CINZ}·${FIM}" "$decorrido"
+      (( decorrido > LIMITE )) && { printf '\n'; aviso "Tempo limite sem resposta."; break; }
+      sleep "$INTERVALO"
+      continue
+    fi
     local total_agora; total_agora="$(grep -c . <<<"$restantes" || true)"
 
     if grep -qx "$ALVO" <<<"$restantes"; then
@@ -312,7 +327,7 @@ modo_local() {
   tabela_nos "$url_obs"
 
   local nos_depois total_depois
-  nos_depois="$(consultar_nos "$url_obs")"
+  nos_depois="$(consultar_nos "$url_obs")" || true
   total_depois="$(grep -c . <<<"$nos_depois" || true)"
   relatorio "$ALVO" "$total_antes" "$total_depois"
   [[ "$recuperado" -eq 1 ]] || aviso "Verifique 'docker compose ps' — a recuperação não foi confirmada."
@@ -376,7 +391,7 @@ modo_aws() {
   printf '\n'
 
   local nos_antes total_antes
-  nos_antes="$(consultar_nos "$URL_BASE")"
+  nos_antes="$(consultar_nos "$URL_BASE")" || true
   total_antes="$(grep -c . <<<"$nos_antes" || true)"
   printf '%s\n' "${NEG}  Cluster ANTES da falha (${total_antes} nós registrados):${FIM}"
   tabela_nos "$URL_BASE"
@@ -408,7 +423,12 @@ modo_aws() {
   info "Aguardando o registro de nós refletir a perda..."
   while :; do
     decorrido=$(( $(agora) - t0 ))
-    restantes="$(consultar_nos "$URL_BASE")"
+    if ! restantes="$(consultar_nos "$URL_BASE")"; then
+      printf '\r  %s t+%-4ss sem resposta do balanceador · aguardando...   ' "${CINZ}·${FIM}" "$decorrido"
+      (( decorrido > LIMITE )) && { printf '\n'; aviso "Tempo limite sem resposta."; break; }
+      sleep "$INTERVALO"
+      continue
+    fi
     total_agora="$(grep -c . <<<"$restantes" || true)"
     if ! grep -q "$instancia_alvo" <<<"$restantes" && (( total_agora < total_antes )); then
       T_DETECCAO="t+${decorrido}s"
@@ -429,7 +449,17 @@ modo_aws() {
   local novos
   while :; do
     decorrido=$(( $(agora) - t0 ))
-    restantes="$(consultar_nos "$URL_BASE")"
+
+    if ! restantes="$(consultar_nos "$URL_BASE")"; then
+      # Consulta falhou — NÃO é o mesmo que "zero nós". Reporta como tal e
+      # tenta de novo, sem contaminar as medições.
+      printf '\r  %s t+%-4ss sem resposta do balanceador · aguardando...   ' \
+        "${CINZ}·${FIM}" "$decorrido"
+      (( decorrido > LIMITE )) && { printf '\n'; aviso "Tempo limite sem resposta."; break; }
+      sleep "$INTERVALO"
+      continue
+    fi
+
     total_agora="$(grep -c . <<<"$restantes" || true)"
 
     # "Substituto" = node_id presente agora que não existia antes da falha.
@@ -440,15 +470,28 @@ modo_aws() {
       ok "$(printf "Nó substituto no ar em ${NEG}t+%ss${FIM}: %s" "$decorrido" "$(tr '\n' ' ' <<<"$novos")")"
     fi
 
-    if (( total_agora >= total_antes )); then
+    # Quórum exige DUAS condições, e não só a contagem.
+    #
+    # O nó derrubado continua no registro por até um ciclo de sweeper (15 s):
+    # ele para de renovar o heartbeat, mas a entrada ainda não expirou. Se a
+    # condição olhasse apenas a contagem, ela já estaria satisfeita no instante
+    # seguinte ao kill — e o script anunciaria "capacidade restabelecida em
+    # t+11s" enquanto a instância substituta mal havia começado a bootar.
+    #
+    # Foi o que aconteceu na primeira execução real. Exigir que exista um
+    # node_id NOVO garante que estamos medindo a reposição, e não o atraso de
+    # expiração do nó morto.
+    if (( total_agora >= total_antes )) && [[ -n "$novos" ]]; then
       T_QUORUM="t+${decorrido}s"
       printf '\n'
-      ok "$(printf "Capacidade restabelecida em ${NEG}t+%ss${FIM} (%s nós)." "$decorrido" "$total_agora")"
+      ok "$(printf "Capacidade restabelecida em ${NEG}t+%ss${FIM} (%s nós, incluindo o substituto)." \
+        "$decorrido" "$total_agora")"
       break
     fi
 
-    printf '\r  %s t+%-4ss %s/%s nós · aguardando o ASG...   ' \
-      "${CINZ}·${FIM}" "$decorrido" "$total_agora" "$total_antes"
+    printf '\r  %s t+%-4ss %s/%s nós%s · aguardando o ASG...   ' \
+      "${CINZ}·${FIM}" "$decorrido" "$total_agora" "$total_antes" \
+      "$([[ -z "$novos" ]] && printf ' (substituto ainda não apareceu)')"
     if (( decorrido > LIMITE )); then
       printf '\n'; aviso "Tempo limite de ${LIMITE}s sem capacidade completa. Verifique o console do ASG."
       break
@@ -460,7 +503,7 @@ modo_aws() {
   tabela_nos "$URL_BASE"
 
   local total_depois
-  total_depois="$(consultar_nos "$URL_BASE" | grep -c . || true)"
+  total_depois="$( { consultar_nos "$URL_BASE" || true; } | grep -c . || true)"
   relatorio "$instancia_alvo" "$total_antes" "$total_depois"
 
   info "Estado atual do ASG:"

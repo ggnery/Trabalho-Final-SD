@@ -121,6 +121,9 @@ loadtest: ## Teste de carga (≥1000 conexões) e gráfico de latência
 
 # GRUPO: Nuvem (AWS)
 
+creds: scripts-exec ## Sandbox: grava as credenciais do clipboard (DIGITE, nao cole)
+	./scripts/creds.sh
+
 # --- AWS Academy Sandbox -----------------------------------------------------
 # A sandbox nao libera ElastiCache, ECR nem criacao de IAM; usa-se
 # infra/terraform-sandbox/, e o ciclo saudavel e subir e destruir a cada sessao.

@@ -8,12 +8,14 @@
 # =============================================================================
 
 locals {
-  # Persistência só funciona com instance profile: sem uma role anexada, a
-  # instância não tem como autenticar no DynamoDB. Em vez de deixar o sistema
-  # falhar em runtime com erro de credencial a cada mensagem, desligamos a
-  # persistência aqui e o app usa o repositório nulo — o chat segue funcionando
-  # em tempo real e só o replay de histórico fica indisponível.
-  persistencia = var.persistencia_habilitada && var.instance_profile != ""
+  # Com DynamoDB Local a persistência funciona sem credencial nenhuma; com o
+  # DynamoDB gerenciado, ela depende de uma instance profile anexada. Se nenhum
+  # dos dois estiver disponível, desligamos a persistência aqui em vez de deixar
+  # o sistema falhar em runtime a cada mensagem — o chat segue em tempo real e
+  # só o replay de histórico fica indisponível.
+  persistencia = var.persistencia_habilitada && (var.dynamodb_local || var.instance_profile != "")
+
+  endpoint_dynamo = var.dynamodb_local ? "http://${local.redis_ip}:8009" : ""
 
   constroi_na_instancia = var.imagem_docker == ""
 
@@ -75,6 +77,12 @@ locals {
       -e SALAVIVA_MESSAGES_TABLE="${aws_dynamodb_table.mensagens.name}" \
       -e SALAVIVA_ROOMS_TABLE="${aws_dynamodb_table.salas.name}" \
       -e SALAVIVA_PERSISTENCE_ENABLED="${local.persistencia ? "true" : "false"}" \
+      %{if var.dynamodb_local~}
+      -e SALAVIVA_DYNAMO_ENDPOINT_URL="${local.endpoint_dynamo}" \
+      -e AWS_ACCESS_KEY_ID="local" \
+      -e AWS_SECRET_ACCESS_KEY="local" \
+      -e AWS_DEFAULT_REGION="${var.aws_region}" \
+      %{endif~}
       -e SALAVIVA_JWT_SECRET="${var.jwt_secret}" \
       -e SALAVIVA_ENVIRONMENT="academy-sandbox" \
       -e SALAVIVA_PORT="8000" \
@@ -90,8 +98,11 @@ resource "aws_launch_template" "app" {
 
   vpc_security_group_ids = [aws_security_group.app.id]
 
-  # A profile NÃO é criada aqui — IAM é read-only na sandbox. Anexamos uma que
-  # já existe (LabInstanceProfile). Se o nome vier vazio, nenhuma é anexada.
+  # Nenhuma profile é criada — IAM é read-only na sandbox. E, por padrão,
+  # nenhuma é sequer anexada: a sandbox Cloud Architecting nega `iam:PassRole`,
+  # e o Auto Scaling recusa o template com "AccessDenied: You are not authorized
+  # to use launch template". Por isso o padrão é DynamoDB Local, que dispensa
+  # credencial. Ver variables.tf > dynamodb_local.
   dynamic "iam_instance_profile" {
     for_each = var.instance_profile == "" ? [] : [1]
     content {
@@ -177,9 +188,9 @@ resource "aws_autoscaling_group" "app" {
     propagate_at_launch = true
   }
 
-  # O Redis precisa estar de pé antes dos nós: um nó que sobe sem Redis reprova
-  # no /readyz e é substituído pelo ASG, em ciclo.
-  depends_on = [aws_instance.redis]
+  # Sem `depends_on` explícito: o Launch Template já referencia o IP do Redis
+  # (redis.tf), o que torna a dependência implícita e evita que o
+  # create_before_destroy deste grupo se propague para a instância do Redis.
 
   lifecycle {
     create_before_destroy = true

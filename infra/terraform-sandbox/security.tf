@@ -103,6 +103,18 @@ resource "aws_vpc_security_group_ingress_rule" "redis_do_app" {
   ip_protocol                  = "tcp"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "dynamodb_local_do_app" {
+  count = var.dynamodb_local ? 1 : 0
+
+  security_group_id = aws_security_group.redis.id
+  description       = "DynamoDB Local somente a partir dos nos da aplicacao"
+
+  referenced_security_group_id = aws_security_group.app.id
+  from_port                    = 8009
+  to_port                      = 8009
+  ip_protocol                  = "tcp"
+}
+
 resource "aws_vpc_security_group_ingress_rule" "redis_ssh" {
   count = var.ssh_cidr == "" ? 0 : 1
 
