@@ -121,6 +121,22 @@ loadtest: ## Teste de carga (≥1000 conexões) e gráfico de latência
 
 # GRUPO: Nuvem (AWS)
 
+# --- AWS Academy Sandbox -----------------------------------------------------
+# A sandbox nao libera ElastiCache, ECR nem criacao de IAM; usa-se
+# infra/terraform-sandbox/, e o ciclo saudavel e subir e destruir a cada sessao.
+
+sandbox-status: scripts-exec ## Sandbox: credenciais, instance profile e o que esta no ar
+	./scripts/sandbox.sh status
+
+sandbox-up: scripts-exec ## Sandbox: provisiona e espera os nos ficarem saudaveis
+	./scripts/sandbox.sh subir
+
+sandbox-down: scripts-exec ## Sandbox: destroi tudo (RODE SEMPRE ao terminar)
+	./scripts/sandbox.sh descer
+
+sandbox-urls: scripts-exec ## Sandbox: reimprime os enderecos do ambiente
+	./scripts/sandbox.sh urls
+
 tf-init: ## terraform init em infra/terraform
 	cd $(TF_DIR) && terraform init
 

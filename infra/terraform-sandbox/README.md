@@ -42,11 +42,31 @@ Duas divergências que você deve **declarar na apresentação** se perguntarem:
 Na sua máquina:
 
 ```bash
-brew install awscli terraform      # terraform via: brew install hashicorp/tap/terraform
+brew install awscli
+brew install hashicorp/tap/terraform
 ```
 
 Não precisa de Docker local para o deploy — quem constrói a imagem é a própria
 instância.
+
+---
+
+## Atalho: o ciclo em um comando
+
+A sessão da sandbox expira a cada ~3 horas e o ciclo saudável é subir e destruir
+a cada uma. Para isso não custar dez passos:
+
+```bash
+make sandbox-status    # credenciais válidas? o que está no ar? consumindo crédito?
+make sandbox-up        # apply + espera os nós ficarem saudáveis + imprime as URLs
+make sandbox-down      # destrói tudo e confere se sobrou algo
+```
+
+Se as credenciais tiverem expirado, o script diz exatamente o que fazer para
+renovar. **Nada se perde quando a sessão acaba** — é só renovar e subir de novo.
+
+O passo a passo manual, abaixo, continua valendo e é o que os comandos acima
+automatizam.
 
 ---
 
