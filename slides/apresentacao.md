@@ -24,7 +24,12 @@ Orçamento de tempo (soma = 15:00):
 **Chat distribuído em tempo real com salas.
 Todos os participantes veem a mesma ordem.**
 
-- Integrantes: {{INTEGRANTES}}
+- Integrantes:
+  - Gabriel Nery da Silva Espindola — 202200509
+  - Giordana de Farias Franco Bueno Bucci — 202200513
+  - Gustavo Henrique Valadares — 202205539
+  - Carlos Alberto Rodrigues da Silva Junior — 202200498
+  - Luiz Felipe Belisário Macedo — 202200538
 - Disciplina: Sistemas Distribuídos
 - Professor: {{PROFESSOR}}
 - Data: {{DATA}}

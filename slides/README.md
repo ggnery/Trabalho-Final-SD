@@ -147,15 +147,31 @@ com maior chance de imprevisto ao vivo.
 | **2** | 5 · 6 · 7 | 4:40 |
 | **3** | 8 · demo · 9 · 10 | 6:40 |
 
-### Com 5 integrantes
+### Com 5 integrantes — a divisão desta equipe
 
-| Quem | Slides | Tempo |
-|---|---|---|
-| **1** | 1 · 2 | 1:40 |
-| **2** | 3 · 4 · 5 | 3:10 |
-| **3** | 6 · 7 | 3:30 |
-| **4** | 8 | 2:30 |
-| **5** | demo · 9 · 10 | 4:10 |
+| Quem | Matrícula | Slides | Tempo | Assunto |
+|---|---|---|---|---|
+| **Giordana de Farias Franco Bueno Bucci** | 202200513 | 1 · 2 | 1:40 | Abertura e o problema |
+| **Carlos Alberto Rodrigues da Silva Junior** | 202200498 | 3 · 4 · 5 | 3:10 | Objetivos, mercado e requisitos |
+| **Luiz Felipe Belisário Macedo** | 202200538 | 6 · 7 | 3:30 | Fundamentação científica e solução |
+| **Gustavo Henrique Valadares** | 202205539 | 8 | 2:30 | Arquitetura — o diagrama |
+| **Gabriel Nery da Silva Espindola** | 202200509 | demo · 9 · 10 | 4:10 | Demo ao vivo, tecnologias e conclusão |
+
+**Por que a demo ficou com o Gabriel:** quem apresenta a parte ao vivo deve ser
+quem mais mexeu na infraestrutura. É o bloco com maior chance de imprevisto, e a
+diferença entre contornar um erro em dez segundos ou travar está em já ter
+digitado aqueles comandos antes.
+
+**Por que o slide 8 tem uma pessoa só:** é o mais longo (2:30) e o mais denso —
+o diagrama da arquitetura. Dividir a explicação de um diagrama entre duas
+pessoas quebra o raciocínio no meio.
+
+Ajustem conforme quem estiver mais confortável com cada assunto; o que não
+convém mudar é quem conduz a demonstração.
+
+**Peso na nota:** Fundamentação vale 15% e Solução vale 15% — os slides 6 e 7,
+que ficaram com o Luiz Felipe, somam 30% sozinhos. Vale ensaiar essa parte com
+atenção extra.
 
 ### Orçamento de tempo (soma = 15:00)
 

@@ -14,7 +14,7 @@
 
 **Professor:** {{PROFESSOR}}
 
-**Integrantes:** {{INTEGRANTES}}
+**Integrantes:** Gabriel Nery da Silva Espindola (202200509); Giordana de Farias Franco Bueno Bucci (202200513); Gustavo Henrique Valadares (202205539); Carlos Alberto Rodrigues da Silva Junior (202200498); Luiz Felipe Belisário Macedo (202200538)
 
 **Versão do documento:** 1.0
 
@@ -2941,7 +2941,11 @@ Versão 1.0 · 2026-08-01 · {{INSTITUICAO}}
 
 Disciplina de Sistemas Distribuídos · {{PROFESSOR}}
 
-{{INTEGRANTES}}
+Gabriel Nery da Silva Espindola — 202200509  
+Giordana de Farias Franco Bueno Bucci — 202200513  
+Gustavo Henrique Valadares — 202205539  
+Carlos Alberto Rodrigues da Silva Junior — 202200498  
+Luiz Felipe Belisário Macedo — 202200538  
 
 ---
 

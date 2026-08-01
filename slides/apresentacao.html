@@ -275,6 +275,9 @@ html[data-tema="claro"] code{ color:var(--ciano) }
   text-transform:uppercase; color:var(--suave); padding-top:.28em;
 }
 .ficha dd{ margin:0; font-weight:560 }
+.equipe{ list-style:none; margin:0; padding:0; display:grid; gap:.18rem; font-weight:500 }
+.equipe li{ font-size:.96em; line-height:1.35 }
+.mat{ font-family:var(--mono); font-size:.82em; color:var(--suave); margin-left:.4em }
 .vazio{
   color:var(--ambar);
   font-family:var(--mono); font-size:.94em;
@@ -515,7 +518,13 @@ html[data-tema="claro"] .ajuda{ background:rgba(226,235,243,.86) }
         <em>Todos veem a mesma ordem.</em></p>
 
       <dl class="ficha">
-        <div><dt>Integrantes</dt><dd><span class="vazio">{{INTEGRANTES}}</span></dd></div>
+        <div><dt>Integrantes</dt><dd><ul class="equipe">
+          <li>Gabriel Nery da Silva Espindola <span class="mat">202200509</span></li>
+          <li>Giordana de Farias Franco Bueno Bucci <span class="mat">202200513</span></li>
+          <li>Gustavo Henrique Valadares <span class="mat">202205539</span></li>
+          <li>Carlos Alberto Rodrigues da Silva Junior <span class="mat">202200498</span></li>
+          <li>Luiz Felipe Belisário Macedo <span class="mat">202200538</span></li>
+        </ul></dd></div>
         <div><dt>Disciplina</dt><dd>Sistemas Distribuídos</dd></div>
         <div><dt>Professor</dt><dd><span class="vazio">{{PROFESSOR}}</span></dd></div>
         <div><dt>Data</dt><dd><span class="vazio">{{DATA}}</span></dd></div>
