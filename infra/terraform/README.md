@@ -1,5 +1,10 @@
 # Infraestrutura AWS do SalaViva (Terraform)
 
+> **Usando a AWS Academy Sandbox?** Esta pasta **não vai funcionar** lá: a
+> sandbox não libera ElastiCache, ECR nem a criação de roles IAM. Use
+> [`../terraform-sandbox/`](../terraform-sandbox/README.md), que substitui cada
+> um desses por um equivalente permitido sem alterar o comportamento do sistema.
+
 Provisionamento completo do ambiente de nuvem do **SalaViva** — chat distribuído
 em tempo real com salas, Projeto Final de Sistemas Distribuídos.
 

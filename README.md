@@ -81,13 +81,21 @@ curl -s localhost:8080/api/rooms/geral/messages | python3 -c "import sys,json;pr
 
 ### Deploy na AWS
 
+Há **duas** infraestruturas, e usar a errada faz o `apply` falhar:
+
+| Sua conta | Pasta | Por quê |
+|---|---|---|
+| AWS comum | `infra/terraform/` | Arquitetura de referência: ElastiCache, ECR, IAM sob medida. É a documentada no SDD. |
+| **AWS Academy Sandbox** | `infra/terraform-sandbox/` | A sandbox não libera ElastiCache, ECR nem criação de IAM. A variante substitui cada um sem mudar o comportamento do sistema. |
+
 ```bash
-cd infra/terraform && terraform init && terraform apply
-./scripts/build_push.sh && ./scripts/deploy.sh
+cd infra/terraform          # ou infra/terraform-sandbox
+terraform init && terraform apply
 ```
 
-Ver `infra/terraform/README.md`. **Rode `./scripts/teardown.sh` após a apresentação**
-para não gerar cobrança.
+Cada pasta tem seu próprio `README.md` com o passo a passo. **Rode `terraform
+destroy` após a apresentação** — na sandbox isso é crítico, o orçamento é de
+US$ 20 sem reposição.
 
 ---
 

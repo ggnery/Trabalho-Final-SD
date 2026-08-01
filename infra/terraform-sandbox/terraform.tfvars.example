@@ -1,0 +1,40 @@
+# Copie para terraform.tfvars e ajuste.
+#
+#     cp terraform.tfvars.example terraform.tfvars
+#
+# terraform.tfvars está no .gitignore — não vai para o repositório.
+
+# --- OBRIGATÓRIO -------------------------------------------------------------
+
+# Gere com:  openssl rand -base64 32
+jwt_secret = "COLE-AQUI-O-RESULTADO-DE-openssl-rand-base64-32"
+
+# --- Ajuste se necessário ----------------------------------------------------
+
+# Instance profile que a sandbox já fornece. Confirme o nome com:
+#   aws iam list-instance-profiles --query 'InstanceProfiles[].InstanceProfileName'
+#
+# Se a sua sandbox não tiver nenhuma, deixe "" — a persistência no DynamoDB
+# será desligada automaticamente e o chat funcionará sem histórico.
+instance_profile = "LabInstanceProfile"
+
+# Seu fork, se você tiver feito um. Precisa ser PÚBLICO.
+# repositorio_git = "https://github.com/SEU-USUARIO/Trabalho-Final-SD.git"
+# branch_git      = "main"
+
+# Imagem pronta em vez de build na instância. Reduz o boot de ~5 min para ~1 min
+# — o que importa na demonstração de falha, porque é o tempo até o nó
+# substituto entrar em serviço. Publique com:
+#
+#   docker buildx build --platform linux/amd64 -t SEU-USUARIO/salaviva:latest --push .
+#
+# imagem_docker = "SEU-USUARIO/salaviva:latest"
+
+# Três nós é o número da demonstração: derrubar um deixa a perda visivelmente
+# parcial. Com dois, some metade do cluster e o efeito fica ambíguo.
+# nos_desejados = 3
+# nos_min       = 2
+# nos_max       = 4
+
+# Só preencha se for depurar por SSH. Use SEU IP com /32, nunca 0.0.0.0/0.
+# ssh_cidr = "203.0.113.42/32"
