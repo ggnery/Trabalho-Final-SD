@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="pt-BR" data-tema="escuro">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SalaViva — Apresentação Final · Sistemas Distribuídos</title>
+<meta name="description" content="Chat distribuído em tempo real com salas. Todos os participantes veem a mesma ordem.">
+<style>
+/* ==========================================================================
+   SalaViva — deck de apresentação
+   Autocontido: sem CDN, sem fonte externa, sem script externo.
+   Paleta com papel semântico fixo:
+     ciano  = máquina / ordenação      ambar = pessoas / salas / produto
+     brasa  = falha                    limo  = verificado
+   ========================================================================== */
+
+:root{
+  /* tema escuro (padrão — sala com luz baixa) */
+  --tinta:      #0E1621;
+  --tinta-2:    #152232;
+  --tinta-3:    #1D2E42;
+  --borda:      #263A52;
+  --gelo:       #E7EFF6;
+  --suave:      #93A9BD;
+  --ambar:      #F2A65A;
+  --ciano:      #57C8DA;
+  --brasa:      #E2695C;
+  --limo:       #7BC8A4;
+  --sombra:     0 1.2rem 3rem rgba(0,0,0,.45);
+  --brilho:     0 0 0 1px rgba(87,200,218,.18), 0 1.4rem 3.6rem rgba(0,0,0,.5);
+
+  --display: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto,
+             "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas,
+          "Liberation Mono", "DejaVu Sans Mono", monospace;
+
+  /* escala tipográfica: acompanha a MENOR dimensão útil da projeção */
+  font-size: clamp(12px, calc(0.60vw + 0.74vh), 26px);
+}
+
+html[data-tema="claro"]{
+  --tinta:      #F2F6FA;
+  --tinta-2:    #FFFFFF;
+  --tinta-3:    #E7EEF5;
+  --borda:      #CBD9E6;
+  --gelo:       #10202E;
+  --suave:      #55707F;
+  --ambar:      #A85E0E;
+  --ciano:      #0B6F84;
+  --brasa:      #A93326;
+  --limo:       #23714C;
+  --sombra:     0 .8rem 2rem rgba(16,32,46,.10);
+  --brilho:     0 0 0 1px rgba(11,111,132,.16), 0 1rem 2.4rem rgba(16,32,46,.12);
+}
+
+*,*::before,*::after{ box-sizing:border-box }
+
+html,body{ height:100% }
+
+body{
+  margin:0;
+  background:var(--tinta);
+  color:var(--gelo);
+  font-family:var(--display);
+  line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+  overflow:hidden;
+}
+
+/* fundo: gradiente discreto que dá profundidade sem virar decoração */
+body::before{
+  content:"";
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(120% 90% at 88% 6%,  rgba(87,200,218,.10), transparent 55%),
+    radial-gradient(100% 80% at 4% 100%, rgba(242,166,90,.075), transparent 60%);
+}
+html[data-tema="claro"] body::before{
+  background:
+    radial-gradient(120% 90% at 88% 6%,  rgba(11,111,132,.07), transparent 55%),
+    radial-gradient(100% 80% at 4% 100%, rgba(168,94,14,.05), transparent 60%);
+}
+
+/* ---------------------------------------------------------------- palco -- */
+
+.deck{ position:relative; height:100vh; height:100dvh; z-index:1 }
+
+.slide{
+  position:absolute; inset:0;
+  display:none;
+  grid-template-rows:auto 1fr auto;
+  gap:1.5rem;
+  padding:2.6rem 3.6rem 5.2rem;
+  overflow:hidden;
+}
+.slide.ativo{ display:grid }
+
+/* entrada encenada: cada faixa do slide sobe com atraso próprio */
+.slide.ativo > *{ animation:sobe .44s cubic-bezier(.2,.7,.3,1) both }
+.slide.ativo > *:nth-child(2){ animation-delay:.06s }
+.slide.ativo > *:nth-child(3){ animation-delay:.12s }
+@keyframes sobe{ from{ opacity:0; transform:translateY(1.1rem) } to{ opacity:1; transform:none } }
+
+/* ------------------------------------------------------------- cabeçalho -- */
+
+.cabeca{ display:grid; gap:.5rem }
+
+.olho{
+  margin:0;
+  font-family:var(--mono);
+  font-size:.86rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--suave);
+  display:flex; align-items:center; gap:.7em; flex-wrap:wrap;
+}
+.olho b{ color:var(--ciano); font-weight:600; letter-spacing:.1em }
+.olho i{ font-style:normal; color:var(--borda) }
+
+.titulo{
+  margin:0;
+  font-family:var(--mono);
+  font-size:2.55rem;
+  font-weight:600;
+  letter-spacing:-.02em;
+  line-height:1.08;
+}
+.regua{ height:2px; width:4.2rem; background:var(--ciano); border-radius:2px; opacity:.85 }
+
+/* ----------------------------------------------------------------- corpo -- */
+
+.corpo{ min-height:0; display:grid; gap:1.6rem; align-content:start }
+.corpo--duas{ grid-template-columns:1.02fr 1fr; align-content:stretch; align-items:center }
+.corpo--cheio{ grid-template-rows:1fr auto; align-content:stretch }
+
+p{ margin:0 }
+
+.tese{
+  margin:0;
+  font-size:1.72rem;
+  font-weight:650;
+  letter-spacing:-.015em;
+  line-height:1.24;
+  max-width:34ch;
+}
+.tese em{ font-style:normal; color:var(--ambar) }
+
+.lista{ list-style:none; margin:0; padding:0; display:grid; gap:.95rem }
+.lista li{
+  position:relative;
+  padding-left:1.5rem;
+  font-size:1.34rem;
+  line-height:1.36;
+}
+.lista li::before{
+  content:"";
+  position:absolute; left:0; top:.55em;
+  width:.5rem; height:.5rem;
+  background:var(--ambar);
+  border-radius:1px;
+}
+.lista strong{ font-weight:680 }
+.lista .nota{ display:block; color:var(--suave); font-size:.95em; margin-top:.15rem }
+
+/* lista numerada — usada SÓ onde a ordem carrega informação (objetivos, fluxo) */
+.passos{ list-style:none; margin:0; padding:0; display:grid; gap:.85rem; counter-reset:p }
+.passos li{
+  counter-increment:p;
+  display:grid; grid-template-columns:2.1rem 1fr; gap:.9rem; align-items:baseline;
+  font-size:1.3rem; line-height:1.34;
+}
+.passos li::before{
+  content:counter(p,decimal-leading-zero);
+  font-family:var(--mono); font-size:.92rem; font-weight:600;
+  color:var(--ciano); letter-spacing:.02em;
+  padding-top:.15em;
+}
+
+.passos--fluxo li{ font-size:1.12rem }
+
+.selo{
+  font-family:var(--mono); font-size:.72rem; font-weight:600;
+  letter-spacing:.1em; text-transform:uppercase;
+  padding:.22em .5em; border-radius:.3rem;
+  border:1px solid currentColor;
+  white-space:nowrap;
+}
+.selo--ec1{ color:var(--suave) }
+.selo--ec2{ color:var(--ciano) }
+.selo--ec3{ color:var(--ambar) }
+
+.cartao{
+  background:var(--tinta-2);
+  border:1px solid var(--borda);
+  border-radius:.7rem;
+  padding:1.15rem 1.3rem;
+  display:grid; gap:.4rem; align-content:start;
+}
+.cartao h3{
+  margin:0;
+  font-family:var(--mono); font-size:.8rem; font-weight:600;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ciano);
+}
+.cartao p{ font-size:1.2rem; line-height:1.36 }
+.cartao--destaque{ border-color:var(--ambar); background:linear-gradient(180deg, var(--tinta-2), var(--tinta-2)) }
+.cartao--destaque h3{ color:var(--ambar) }
+
+.grade{ display:grid; gap:1rem }
+.grade--3{ grid-template-columns:repeat(3,1fr) }
+.grade--2{ grid-template-columns:repeat(2,1fr) }
+
+/* ------------------------------------------------------------- tabelas --- */
+
+.tabela{ width:100%; border-collapse:collapse; font-size:1.12rem }
+.tabela th,.tabela td{
+  text-align:left; padding:.62rem .8rem;
+  border-bottom:1px solid var(--borda);
+  vertical-align:top; line-height:1.3;
+}
+.tabela thead th{
+  font-family:var(--mono); font-size:.76rem; font-weight:600;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--suave);
+  border-bottom-color:var(--ciano);
+}
+.tabela tbody tr:last-child td{ border-bottom:none }
+.tabela .nos{ background:rgba(87,200,218,.07) }
+.tabela .nos td{ font-weight:640 }
+.tabela .ref{ font-weight:660; white-space:nowrap }
+.tabela .ref span{ display:block; font-weight:400; color:var(--suave); font-size:.86em; white-space:normal }
+.tabela .fora{ color:var(--suave) }
+.tabela .fora .x{ color:var(--brasa); font-family:var(--mono); font-weight:700; margin-right:.45em }
+
+/* ------------------------------------------------------------ tipografia -- */
+
+code,.mono{ font-family:var(--mono); font-size:.92em; letter-spacing:-.01em }
+code{ color:var(--ciano) }
+html[data-tema="claro"] code{ color:var(--ciano) }
+.num{ color:var(--ambar); font-weight:700 }
+
+/* ------------------------------------------------------------- rodapé ---- */
+
+.rodape{
+  font-size:1rem; color:var(--suave);
+  border-top:1px solid var(--borda);
+  padding-top:.7rem;
+  display:flex; gap:1.6rem; flex-wrap:wrap; align-items:baseline;
+}
+.rodape b{ color:var(--gelo); font-weight:600 }
+.rodape .marca{ color:var(--ambar) }
+
+/* ================================================================ capa === */
+
+.slide--capa{ grid-template-rows:1fr auto; align-content:center }
+.capa{ display:grid; grid-template-columns:1.05fr 1fr; gap:3.2rem; align-items:center }
+
+.marca-nome{
+  margin:0;
+  font-size:5.4rem;
+  font-weight:760;
+  letter-spacing:-.045em;
+  line-height:.92;
+}
+.marca-nome span{ color:var(--ambar) }
+.marca-sub{
+  margin:1.1rem 0 0;
+  font-size:1.5rem; font-weight:520; line-height:1.28;
+  max-width:24ch;
+}
+.marca-sub em{ font-style:normal; color:var(--ciano) }
+
+.ficha{ margin:2.2rem 0 0; display:grid; gap:.5rem; font-size:1.08rem }
+.ficha div{ display:grid; grid-template-columns:9.5rem 1fr; gap:.8rem }
+.ficha dt{
+  font-family:var(--mono); font-size:.78rem; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--suave); padding-top:.28em;
+}
+.ficha dd{ margin:0; font-weight:560 }
+.vazio{
+  color:var(--ambar);
+  font-family:var(--mono); font-size:.94em;
+  border-bottom:1px dashed var(--ambar);
+}
+
+/* o envelope: o artefato mais característico do sistema, no lugar do herói */
+.envelope{
+  background:var(--tinta-2);
+  border:1px solid var(--borda);
+  border-radius:.8rem;
+  box-shadow:var(--brilho);
+  padding:1.3rem 1.4rem 1.1rem;
+  font-family:var(--mono);
+}
+.envelope-topo{
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:.74rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--suave); border-bottom:1px solid var(--borda);
+  padding-bottom:.7rem; margin-bottom:.9rem;
+}
+.envelope-topo b{ color:var(--limo); font-weight:600 }
+.linha-msg{
+  display:grid; grid-template-columns:5.4rem 4rem 1fr; gap:.7rem;
+  align-items:baseline; padding:.42rem 0; font-size:1rem;
+  border-bottom:1px dashed rgba(128,150,170,.16);
+}
+.linha-msg:last-of-type{ border-bottom:none }
+.linha-msg .s{ color:var(--ciano); font-weight:700 }
+.linha-msg .l{ color:var(--suave) }
+.linha-msg .t{ color:var(--gelo) }
+.linha-msg .t b{ color:var(--ambar); font-weight:600 }
+.envelope-pe{
+  margin-top:.9rem; padding-top:.8rem; border-top:1px solid var(--borda);
+  font-family:var(--display);
+  font-size:.95rem; color:var(--suave); line-height:1.4;
+}
+.envelope-pe b{ color:var(--gelo); font-weight:600 }
+
+/* ============================================================== números == */
+
+.painel-num{ display:grid; grid-template-columns:repeat(4,1fr); gap:1rem }
+.num-item{
+  border:1px solid var(--borda); border-radius:.7rem;
+  background:var(--tinta-2); padding:1rem 1.1rem;
+  display:grid; gap:.2rem; align-content:start;
+}
+.num-item .v{
+  font-size:2.6rem; font-weight:740; letter-spacing:-.035em; line-height:1;
+  color:var(--limo);
+}
+.num-item .k{
+  font-family:var(--mono); font-size:.82rem; letter-spacing:.1em;
+  text-transform:uppercase; color:var(--suave); line-height:1.35;
+}
+
+.faixa-custo{
+  display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap;
+  border:1px solid var(--ambar); border-radius:.7rem;
+  padding:.9rem 1.2rem; background:rgba(242,166,90,.07);
+}
+.faixa-custo .v{ font-size:2rem; font-weight:740; letter-spacing:-.03em; color:var(--ambar) }
+.faixa-custo .d{ font-size:1.14rem; color:var(--suave) }
+.faixa-custo .d b{ color:var(--gelo); font-weight:600 }
+
+/* ================================================================ chips == */
+
+.grupos{ display:grid; grid-template-columns:repeat(5,1fr); gap:1.1rem; align-content:start }
+.grupo h3{
+  margin:0 0 .7rem;
+  font-family:var(--mono); font-size:.76rem; font-weight:600;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--ciano);
+  border-bottom:1px solid var(--borda); padding-bottom:.45rem;
+}
+.chips{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:.4rem }
+.chips li{
+  font-family:var(--mono); font-size:.94rem;
+  border:1px solid var(--borda); border-radius:.35rem;
+  padding:.25rem .5rem; color:var(--gelo); background:var(--tinta-2);
+  white-space:nowrap;
+}
+.chips li.forte{ border-color:var(--ambar); color:var(--ambar) }
+
+/* ================================================================== svg == */
+
+.quadro{ display:grid; place-items:center; min-height:0 }
+/* height:auto + max-height mantém a proporção do viewBox em qualquer projeção */
+.quadro svg{ width:100%; height:auto; max-height:100%; display:block }
+
+.svg-caixa{ fill:var(--tinta-2); stroke:var(--borda); stroke-width:1.5 }
+.svg-caixa-forte{ fill:var(--tinta-2); stroke:var(--ciano); stroke-width:1.8 }
+.svg-caixa-ambar{ fill:var(--tinta-2); stroke:var(--ambar); stroke-width:1.8 }
+.svg-tracejado{ fill:none; stroke:var(--borda); stroke-width:1.4; stroke-dasharray:7 6 }
+.svg-tit{ fill:var(--gelo); font-family:var(--display); font-weight:660; font-size:15px }
+.svg-txt{ fill:var(--suave); font-family:var(--display); font-size:13px }
+.svg-mono{ fill:var(--ciano); font-family:var(--mono); font-size:12.5px }
+.svg-mono-suave{ fill:var(--suave); font-family:var(--mono); font-size:12px }
+.svg-rot{
+  fill:var(--suave); font-family:var(--mono); font-size:11px;
+  letter-spacing:1.4px; text-transform:uppercase;
+}
+.svg-linha{ fill:none; stroke:var(--borda); stroke-width:2 }
+.svg-fluxo{ fill:none; stroke:var(--ciano); stroke-width:2.2 }
+.svg-fraco{ fill:none; stroke:var(--suave); stroke-width:1.6; stroke-dasharray:6 5; opacity:.75 }
+.svg-erro{ fill:var(--brasa); font-family:var(--display); font-weight:660; font-size:13px }
+/* preenchimentos por classe: var() em atributo de apresentação não é confiável */
+.svg-forte{ fill:var(--gelo) }
+.svg-ok{ fill:var(--limo) }
+.p-ambar{ fill:var(--ambar) }
+.p-ciano{ fill:var(--ciano) }
+.p-suave{ fill:var(--suave) }
+.p-borda{ fill:var(--borda) }
+
+/* pulso de tráfego no canal Pub/Sub — o único movimento contínuo do deck */
+.slide.ativo .svg-pulso{
+  stroke-dasharray:5 13;
+  animation:corre 1.4s linear infinite;
+}
+@keyframes corre{ to{ stroke-dashoffset:-36 } }
+
+/* ================================================================= HUD === */
+
+.hud{
+  position:fixed; top:1.5rem; right:2rem; z-index:9;
+  display:flex; align-items:center; gap:1rem;
+  font-family:var(--mono); font-size:.82rem; letter-spacing:.1em;
+  color:var(--suave); pointer-events:none;
+}
+.hud .logo{ color:var(--gelo); font-weight:600; letter-spacing:.16em; text-transform:uppercase }
+.hud .logo b{ color:var(--ambar) }
+.hud .cont b{ color:var(--gelo); font-weight:600 }
+.hud .relogio{
+  border:1px solid var(--borda); border-radius:.35rem;
+  padding:.2rem .5rem; color:var(--suave); font-variant-numeric:tabular-nums;
+}
+.hud .relogio.ligado{ color:var(--limo); border-color:var(--limo) }
+.hud .relogio.perto{ color:var(--ambar); border-color:var(--ambar) }
+.hud .relogio.estourou{ color:var(--brasa); border-color:var(--brasa) }
+
+/* trilho: 10 posições — o deck é, ele próprio, uma sequência total */
+.trilho{
+  position:fixed; left:3.6rem; right:3.6rem; bottom:2.4rem; z-index:9;
+  display:flex; gap:.4rem; align-items:center;
+}
+.trilho button{
+  flex:1; height:.38rem; padding:0;
+  border:none; border-radius:99px;
+  background:var(--borda); cursor:pointer;
+  transition:background .25s, transform .25s;
+}
+.trilho button:hover{ background:var(--suave) }
+.trilho button.visto{ background:var(--ciano); opacity:.42 }
+.trilho button.aqui{ background:var(--ciano); opacity:1; transform:scaleY(2.1) }
+.trilho button:focus-visible{ outline:2px solid var(--ambar); outline-offset:3px }
+
+.dica{
+  position:fixed; left:3.6rem; bottom:.7rem; z-index:8;
+  font-family:var(--mono); font-size:.74rem; letter-spacing:.1em;
+  color:var(--suave); opacity:.5; pointer-events:none;
+}
+
+/* ajuda */
+.ajuda{
+  position:fixed; inset:0; z-index:20;
+  display:none; place-items:center;
+  background:rgba(6,12,19,.82); backdrop-filter:blur(4px);
+}
+html[data-tema="claro"] .ajuda{ background:rgba(226,235,243,.86) }
+.ajuda.aberta{ display:grid }
+.ajuda-cx{
+  background:var(--tinta-2); border:1px solid var(--borda);
+  border-radius:.8rem; padding:1.8rem 2.2rem; box-shadow:var(--sombra);
+  min-width:26rem;
+}
+.ajuda-cx h3{
+  margin:0 0 1.1rem; font-family:var(--mono); font-size:.82rem;
+  letter-spacing:.16em; text-transform:uppercase; color:var(--ciano);
+}
+.ajuda-cx dl{ margin:0; display:grid; grid-template-columns:auto 1fr; gap:.55rem 1.4rem; font-size:1rem }
+.ajuda-cx dt{ font-family:var(--mono); color:var(--ambar); white-space:nowrap }
+.ajuda-cx dd{ margin:0; color:var(--suave) }
+
+/* =========================================================== acessível == */
+
+@media (prefers-reduced-motion:reduce){
+  .slide.ativo > *{ animation:none }
+  .slide.ativo .svg-pulso{ animation:none; stroke-dasharray:5 13 }
+  .trilho button{ transition:none }
+}
+
+/* telas estreitas: o deck continua legível, empilhado */
+@media (max-aspect-ratio:1/1){
+  .corpo--duas,.capa,.grade--3,.painel-num,.grupos{ grid-template-columns:1fr }
+  .grupos{ gap:.8rem }
+  .slide{ padding:2rem 1.6rem 4rem }
+  .trilho,.dica{ left:1.6rem; right:1.6rem }
+  .dica{ display:none }
+}
+
+/* ============================================================== impressão */
+
+@media print{
+  @page{ size:33.87cm 19.05cm; margin:0 }
+  html{ font-size:15px }
+  html,body{ height:auto; overflow:visible }
+  body{ background:#fff; color:#10202E }
+  body::before{ display:none }
+  :root,html[data-tema="escuro"],html[data-tema="claro"]{
+    --tinta:#fff; --tinta-2:#fff; --tinta-3:#F2F6FA; --borda:#B9C9D8;
+    --gelo:#10202E; --suave:#4C6376;
+    --ambar:#96540B; --ciano:#0A6377; --brasa:#982E22; --limo:#1E6444;
+    --sombra:none; --brilho:0 0 0 1px #DCE6EF;
+  }
+  .deck{ height:auto }
+  .slide{
+    position:relative; inset:auto;
+    display:grid !important;
+    width:33.87cm; height:19.05cm;
+    break-after:page; page-break-after:always;
+    animation:none !important;
+  }
+  .slide > *{ animation:none !important }
+  .slide:last-child{ break-after:auto; page-break-after:auto }
+  .hud,.trilho,.dica,.ajuda{ display:none !important }
+}
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+<!-- ====================================================== SLIDE 1 · CAPA -->
+<section class="slide slide--capa ativo" data-nome="Identificação" data-tempo="0:40" aria-label="Slide 1 de 10">
+  <div class="capa">
+    <div>
+      <h1 class="marca-nome">Sala<span>Viva</span></h1>
+      <p class="marca-sub">Chat distribuído em tempo real com salas.
+        <em>Todos veem a mesma ordem.</em></p>
+
+      <dl class="ficha">
+        <div><dt>Integrantes</dt><dd><span class="vazio">{{INTEGRANTES}}</span></dd></div>
+        <div><dt>Disciplina</dt><dd>Sistemas Distribuídos</dd></div>
+        <div><dt>Professor</dt><dd><span class="vazio">{{PROFESSOR}}</span></dd></div>
+        <div><dt>Data</dt><dd><span class="vazio">{{DATA}}</span></dd></div>
+      </dl>
+    </div>
+
+    <div class="envelope" aria-label="Exemplo de mensagens ordenadas">
+      <div class="envelope-topo"><span>sala · geral</span><span><b>ordem total</b></span></div>
+      <div class="linha-msg"><span class="s">seq=141</span><span class="l">L=84</span>
+        <span class="t"><b>ana@node-b</b> alguém consegue abrir o sistema?</span></div>
+      <div class="linha-msg"><span class="s">seq=142</span><span class="l">L=86</span>
+        <span class="t"><b>bruno@node-c</b> consigo sim, acabei de entrar</span></div>
+      <div class="linha-msg"><span class="s">seq=143</span><span class="l">L=87</span>
+        <span class="t"><b>gabriel@node-a</b> então é rede daqui</span></div>
+      <p class="envelope-pe">Três usuários, três instâncias EC2 diferentes,
+        <b>uma única sequência</b>. O número à esquerda é o mesmo para todo mundo.</p>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><b>Projeto 3</b> — chat em tempo real com salas (Pub/Sub)</span>
+    <span class="marca">AWS · us-east-1</span>
+    <span>Apresentação: 15 min + 5 min de arguição</span>
+  </div>
+</section>
+
+<!-- ================================================= SLIDE 2 · INTRODUÇÃO -->
+<section class="slide" data-nome="Introdução" data-tempo="1:00" aria-label="Slide 2 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=02</b><i>·</i>Introdução / Contextualização</p>
+    <h2 class="titulo">Dois servidores, duas conversas</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo corpo--duas">
+    <div style="display:grid;gap:1.5rem">
+      <p class="tese">Quando o chat cresce para mais de um servidor,
+        cada usuário pode ver a conversa em <em>uma ordem diferente</em>.</p>
+      <ul class="lista">
+        <li><strong>Contexto:</strong> o chat escala horizontalmente — a conversa não escala junto</li>
+        <li><strong>Público afetado:</strong> suporte ao cliente, comunidades, salas de aula, jogos</li>
+        <li><strong>Relevância:</strong> a ordem <em>é</em> o significado; resposta antes da pergunta muda o sentido</li>
+        <li><strong>Causa raiz:</strong> o relógio físico de cada máquina diverge, mesmo sob NTP
+          <span class="nota">Não é falha de rede — é propriedade de sistema distribuído sem ordenação</span></li>
+      </ul>
+    </div>
+
+    <div class="quadro">
+      <svg viewBox="0 0 620 400" role="img" aria-label="A mesma sala vista por dois usuários em ordens diferentes">
+        <text x="310" y="20" class="svg-rot" text-anchor="middle">mesma sala · sem ordenação</text>
+
+        <!-- painel Ana -->
+        <rect x="10" y="40" width="285" height="290" rx="10" class="svg-caixa"/>
+        <text x="28" y="68" class="svg-tit">Ana</text>
+        <text x="66" y="68" class="svg-mono-suave">conectada ao node-a</text>
+        <line x1="10" y1="82" x2="295" y2="82" class="svg-linha" stroke-width="1"/>
+
+        <rect x="28" y="100" width="249" height="62" rx="8" class="svg-caixa-ambar"/>
+        <text x="42" y="122" class="svg-mono-suave">17:04:12.311</text>
+        <text x="42" y="145" class="svg-txt svg-forte">“alguém consegue abrir o sistema?”</text>
+
+        <rect x="28" y="176" width="249" height="62" rx="8" class="svg-caixa"/>
+        <text x="42" y="198" class="svg-mono-suave">17:04:12.297</text>
+        <text x="42" y="221" class="svg-txt svg-forte">“consigo sim, acabei de entrar”</text>
+
+        <text x="28" y="268" class="svg-txt">1º a pergunta, 2º a resposta.</text>
+        <text x="28" y="290" class="svg-txt svg-ok">Faz sentido.</text>
+
+        <!-- painel Bruno -->
+        <rect x="325" y="40" width="285" height="290" rx="10" class="svg-caixa"/>
+        <text x="343" y="68" class="svg-tit">Bruno</text>
+        <text x="399" y="68" class="svg-mono-suave">conectado ao node-b</text>
+        <line x1="325" y1="82" x2="610" y2="82" class="svg-linha" stroke-width="1"/>
+
+        <rect x="343" y="100" width="249" height="62" rx="8" class="svg-caixa"/>
+        <text x="357" y="122" class="svg-mono-suave">17:04:12.297</text>
+        <text x="357" y="145" class="svg-txt svg-forte">“consigo sim, acabei de entrar”</text>
+
+        <rect x="343" y="176" width="249" height="62" rx="8" class="svg-caixa-ambar"/>
+        <text x="357" y="198" class="svg-mono-suave">17:04:12.311</text>
+        <text x="357" y="221" class="svg-txt svg-forte">“alguém consegue abrir o sistema?”</text>
+
+        <text x="343" y="268" class="svg-erro">A resposta chega antes da pergunta.</text>
+        <text x="343" y="290" class="svg-txt">O log do atendimento fica errado.</text>
+
+        <text x="310" y="366" class="svg-mono" text-anchor="middle">14 ms de desvio entre relógios</text>
+        <text x="310" y="386" class="svg-txt" text-anchor="middle">bastam para inverter duas mensagens</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span>É exatamente o problema que motivou <b>Lamport (1978)</b> — retomado no slide 6</span>
+  </div>
+</section>
+
+<!-- ================================================== SLIDE 3 · OBJETIVOS -->
+<section class="slide" data-nome="Objetivos" data-tempo="0:50" aria-label="Slide 3 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=03</b><i>·</i>Objetivos</p>
+    <h2 class="titulo">O que este trabalho se propõe a provar</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo" style="align-content:center;gap:2rem">
+    <p class="tese" style="max-width:62ch;font-size:1.5rem">
+      <span style="font-family:var(--mono);font-size:.7em;letter-spacing:.14em;text-transform:uppercase;color:var(--suave);display:block;margin-bottom:.5rem">Objetivo geral</span>
+      Construir e demonstrar, rodando na AWS, um chat multi-sala que
+      <em>garante ordem total</em> das mensagens e <em>sobrevive à queda de um nó</em>.
+    </p>
+
+    <ol class="passos" style="gap:1rem">
+      <li><span><strong>Comunicação indireta</strong> — nenhum nó conhece outro nó, só o tópico
+        <span class="selo selo--ec2" style="margin-left:.6rem">EC2</span></span></li>
+      <li><span><strong>Ordenação de eventos</strong> — Lamport, relógio vetorial e sequenciador, com papéis distintos
+        <span class="selo selo--ec2" style="margin-left:.6rem">EC2</span></span></li>
+      <li><span><strong>Escalabilidade horizontal</strong> — somar um nó sem reconfigurar os existentes
+        <span class="selo selo--ec2" style="margin-left:.6rem">EC2</span></span></li>
+      <li><span><strong>Tolerância a falhas</strong> — derrubar uma instância ao vivo, zero mensagem perdida
+        <span class="selo selo--ec3" style="margin-left:.6rem">EC3</span></span></li>
+      <li><span><strong>Documentação defensável</strong> — 8 ADRs, cada escolha com a alternativa descartada
+        <span class="selo selo--ec1" style="margin-left:.6rem">EC1</span></span></li>
+    </ol>
+  </div>
+
+  <div class="rodape">
+    <span><b>EC1</b> documentação</span>
+    <span><b>EC2</b> implementação de conceitos</span>
+    <span><b>EC3</b> demonstração prática</span>
+    <span class="marca">os objetivos são os critérios de avaliação, na ordem</span>
+  </div>
+</section>
+
+<!-- ==================================================== SLIDE 4 · MERCADO -->
+<section class="slide" data-nome="Nicho de Mercado" data-tempo="1:10" aria-label="Slide 4 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=04</b><i>·</i>Nicho de Mercado</p>
+    <h2 class="titulo">Chat como infraestrutura, não como aplicativo</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo corpo--duas">
+    <ul class="lista">
+      <li><strong>Público-alvo:</strong> produtos que precisam de chat <em>dentro</em> deles — suporte ao cliente, comunidades, salas de aula online, jogos</li>
+      <li><strong>Clientes:</strong> quem não pode terceirizar a conversa — dado sensível, exigência de auditoria, transcrição usada como prova</li>
+      <li><strong>Mercado:</strong> mensageria em tempo real virou camada de infraestrutura (Discord, Slack, Matrix, Sendbird, PubNub)</li>
+      <li><strong>Diferencial:</strong> ordem total <em>verificável</em>, arquitetura auditável e autohospedável, a partir de <span class="num">US$ 0,07/h</span></li>
+    </ul>
+
+    <table class="tabela">
+      <thead>
+        <tr><th>Solução</th><th>Ordem total</th><th>Auto­hospedável</th><th>Arquitetura</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Discord / Slack</td><td class="fora">não documentada</td><td class="fora">não</td><td class="fora">fechada</td></tr>
+        <tr><td>Matrix</td><td class="fora">DAG, eventual</td><td>sim</td><td>aberta</td></tr>
+        <tr><td>Sendbird / PubNub</td><td class="fora">por canal, opaca</td><td class="fora">não</td><td class="fora">SaaS</td></tr>
+        <tr class="nos"><td>SalaViva</td><td>por sala, determinística</td><td>sim</td><td>8 ADRs públicos</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rodape">
+    <span>Não competimos em recursos. Competimos em <b>uma propriedade que dá para verificar</b>.</span>
+  </div>
+</section>
+
+<!-- ================================================== SLIDE 5 · REQUISITOS -->
+<section class="slide" data-nome="Requisitos" data-tempo="1:10" aria-label="Slide 5 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=05</b><i>·</i>Requisitos Atualizado</p>
+    <h2 class="titulo">Do problema à conta no fim do mês</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo" style="gap:1.1rem;align-content:center">
+    <div class="grade grade--3">
+      <div class="cartao"><h3>Problema</h3>
+        <p>Ordem divergente entre nós; nó que cai leva as mensagens junto.</p></div>
+      <div class="cartao"><h3>Solução</h3>
+        <p>Pub/Sub para difusão, <code>INCR</code> atômico para ordem total, DynamoDB para replay.</p></div>
+      <div class="cartao"><h3>Público</h3>
+        <p>Salas de 2 a centenas de participantes; várias salas na mesma conexão.</p></div>
+      <div class="cartao"><h3>Recursos</h3>
+        <p>3× EC2 <code>t3.micro</code> (ASG 2–4) · ALB · ElastiCache Redis · DynamoDB · ECR · CloudWatch</p></div>
+      <div class="cartao cartao--destaque"><h3>Custos</h3>
+        <p>≈ <span class="num">US$ 0,07/h</span> com o ambiente de pé · ≈ US$ 0,30 por sessão de 4 h</p></div>
+      <div class="cartao"><h3>Benefícios</h3>
+        <p>Mesma ordem para todos · zero perda na queda de um nó · salas escalam independentes.</p></div>
+    </div>
+
+    <div class="faixa-custo">
+      <span class="v">US$ 0</span>
+      <span class="d">é o que gastamos com <b>NAT Gateway</b> — ele custaria ~US$ 32/mês por AZ e não é Free Tier.
+        Isolamento feito por <b>Security Groups encadeados</b>: a porta 8000 só aceita tráfego vindo do balanceador (ADR-006).</span>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span><b>Metas mensuráveis</b></span>
+    <span>p95 &lt; 200 ms</span><span>≥ 1.000 conexões simultâneas</span>
+    <span>reconexão &lt; 5 s</span><span>ASG restaura em &lt; 3 min</span>
+  </div>
+</section>
+
+<!-- =============================================== SLIDE 6 · FUNDAMENTAÇÃO -->
+<section class="slide" data-nome="Fundamentação Científica" data-tempo="1:50" aria-label="Slide 6 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=06</b><i>·</i>Fundamentação Científica</p>
+    <h2 class="titulo">Cada escolha tem uma fonte</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo" style="align-content:center">
+    <table class="tabela" style="font-size:1.1rem">
+      <thead><tr><th style="width:30%">Referência</th><th>Evidência da literatura → o que ela fundamenta no SalaViva</th></tr></thead>
+      <tbody>
+        <tr><td class="ref">Lamport (1978)<span><i>Time, Clocks, and the Ordering of Events</i></span></td>
+          <td>Não existe “mesmo instante” em sistema distribuído — existe <em>happened-before</em>.
+            <b>Fundamenta:</b> o relógio lógico de cada nó e a rejeição do timestamp físico como critério de ordem.</td></tr>
+        <tr><td class="ref">Mattern (1988); Fidge (1988)<span>Relógios vetoriais</span></td>
+          <td>O relógio escalar não distingue causalidade de concorrência.
+            <b>Fundamenta:</b> o relógio vetorial no envelope e a marcação de mensagens concorrentes no cliente CLI.</td></tr>
+        <tr><td class="ref">Coulouris, cap. 6<span>Comunicação indireta</span></td>
+          <td>Desacoplamento no espaço e no tempo entre emissor e receptor.
+            <b>Fundamenta:</b> Pub/Sub como único canal — nenhum nó conhece nenhum outro nó.</td></tr>
+        <tr><td class="ref">Coulouris, cap. 14<span>Tempo e estados globais</span></td>
+          <td>Ordenação de eventos e limites da sincronização de relógios.
+            <b>Fundamenta:</b> a separação entre ordem parcial (Lamport) e ordem total (sequenciador).</td></tr>
+        <tr><td class="ref">Tanenbaum &amp; Van Steen<span>Multicast ordenado</span></td>
+          <td>Sequenciador centralizado como implementação clássica de difusão totalmente ordenada.
+            <b>Fundamenta:</b> <code>INCR chat:seq:{sala}</code> no Redis.</td></tr>
+        <tr><td class="ref">RFC 6455<span>The WebSocket Protocol</span></td>
+          <td>Canal full-duplex persistente sobre HTTP/1.1 com handshake de <i>upgrade</i>.
+            <b>Fundamenta:</b> o transporte e a exigência de ALB (único ELB que suporta <i>upgrade</i>).</td></tr>
+        <tr><td class="ref">Brewer (2000)<span>Gilbert &amp; Lynch (2002) — CAP</span></td>
+          <td>Sob partição, escolhe-se consistência ou disponibilidade.
+            <b>Fundamenta:</b> <em>CP para ordenação</em> (o chat para se o árbitro cair) e <em>AP para presença</em> (usuário fantasma por 15 s é aceitável).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rodape">
+    <span>Três ideias sustentam o projeto: <b>causalidade</b> (Lamport), <b>concorrência</b> (Mattern),
+      <b>ordem total por sequenciador</b> (Tanenbaum) — e o CAP diz por dado de que lado ficamos.</span>
+  </div>
+</section>
+
+<!-- ==================================================== SLIDE 7 · SOLUÇÃO -->
+<section class="slide" data-nome="Solução" data-tempo="1:40" aria-label="Slide 7 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=07</b><i>·</i>Solução</p>
+    <h2 class="titulo">Um número, atribuído uma vez, respeitado por todos</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo corpo--duas">
+    <ul class="lista">
+      <li><strong>Onde se aplica:</strong> qualquer produto com chat multi-sala; demonstrado na AWS <code>us-east-1</code></li>
+      <li><strong>Técnica:</strong> Redis Pub/Sub para difusão + <code>INCR</code> atômico por sala para ordem total
+        + fila de <em>hold-back</em> no cliente + DynamoDB <code>(room_id, seq)</code> para replay</li>
+      <li><strong>Por que funciona:</strong> <code>INCR</code> é atômico e o Redis é single-threaded — serializa por construção, sem lock e sem retry</li>
+      <li><strong>Benefícios:</strong> ordem idêntica para todos · nó pode morrer sem perder mensagem · salas escalam de forma independente</li>
+    </ul>
+
+    <div style="display:grid;gap:.8rem">
+      <p class="olho" style="font-size:.8rem"><b>Justificativa</b><i>·</i>o que foi descartado</p>
+      <table class="tabela" style="font-size:1.02rem">
+        <tbody>
+          <tr><td class="fora"><span class="x">✕</span>Timestamp físico</td>
+            <td>Relógios de EC2 divergem sob NTP → mensagens invertidas. É o problema, não a solução.</td></tr>
+          <tr><td class="fora"><span class="x">✕</span>Consenso (Raft/Paxos)</td>
+            <td>Superdimensionado: existe um árbitro natural e não precisamos sobreviver à partição dele. Latência de quórum não se paga.</td></tr>
+          <tr><td class="fora"><span class="x">✕</span>SNS + SQS</td>
+            <td>SQS entrega a <b>um</b> consumidor — é balanceamento, não difusão. Exigiria uma fila por nó, recriando o acoplamento nó-a-nó. E 100–500 ms de latência.</td></tr>
+          <tr><td class="fora"><span class="x">✕</span>Lambda + API Gateway</td>
+            <td>Sem instância para derrubar na demonstração; <i>cold start</i> em VPC; relógio de Lamport é estado de processo, e Lambda não tem processo.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span>Cada linha descartada acima é um <b>ADR</b> no repositório, com contexto, decisão e consequências.</span>
+  </div>
+</section>
+
+<!-- ================================================ SLIDE 8 · ARQUITETURA -->
+<section class="slide" data-nome="Arquitetura da Solução" data-tempo="2:30" aria-label="Slide 8 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=08</b><i>·</i>Arquitetura da Solução<i>·</i><span style="color:var(--brasa)">demonstração ao vivo</span></p>
+    <h2 class="titulo">Nenhuma seta entre os nós</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo corpo--cheio" style="gap:1.1rem">
+    <div class="quadro">
+      <svg viewBox="0 0 1240 545" role="img"
+           aria-label="Clientes conectam por WebSocket ao Application Load Balancer, que distribui para três instâncias EC2 em Auto Scaling Group; as instâncias se comunicam apenas com o ElastiCache Redis por Pub/Sub e gravam o histórico no DynamoDB">
+        <defs>
+          <marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="p-borda"/>
+          </marker>
+          <marker id="seta-c" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="p-ciano"/>
+          </marker>
+          <marker id="seta-s" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" class="p-suave"/>
+          </marker>
+        </defs>
+
+        <!-- clientes -->
+        <rect x="8" y="175" width="172" height="196" rx="10" class="svg-caixa"/>
+        <text x="24" y="203" class="svg-tit">Clientes</text>
+        <text x="24" y="232" class="svg-txt">Web (sem build)</text>
+        <text x="24" y="256" class="svg-txt">CLI (terminal)</text>
+        <text x="24" y="280" class="svg-txt">Teste de carga</text>
+        <line x1="24" y1="298" x2="164" y2="298" class="svg-linha" stroke-width="1"/>
+        <text x="24" y="322" class="svg-mono">WebSocket / WSS</text>
+        <text x="24" y="344" class="svg-mono-suave">JWT no handshake</text>
+
+        <line x1="182" y1="273" x2="210" y2="273" class="svg-linha" marker-end="url(#seta)"/>
+
+        <!-- ALB -->
+        <rect x="214" y="140" width="202" height="266" rx="10" class="svg-caixa-forte"/>
+        <text x="232" y="170" class="svg-tit">Application</text>
+        <text x="232" y="190" class="svg-tit">Load Balancer</text>
+        <text x="232" y="216" class="svg-txt">internet-facing · 2 AZs</text>
+        <line x1="232" y1="234" x2="398" y2="234" class="svg-linha" stroke-width="1"/>
+        <text x="232" y="260" class="svg-mono">GET /readyz · 15 s</text>
+        <text x="232" y="281" class="svg-txt">3 falhas → fora do pool</text>
+        <text x="232" y="311" class="svg-mono">upgrade: websocket</text>
+        <text x="232" y="332" class="svg-txt">idle timeout 300 s</text>
+        <text x="232" y="362" class="svg-mono-suave">stickiness por cookie</text>
+        <text x="232" y="380" class="svg-mono-suave">(opcional — ADR-007)</text>
+
+        <!-- ASG -->
+        <rect x="440" y="40" width="330" height="466" rx="12" class="svg-tracejado"/>
+        <text x="456" y="66" class="svg-rot">ASG · min 2 · desejado 3 · máx 4</text>
+
+        <path d="M418,273 C434,273 434,148 452,148" class="svg-linha" marker-end="url(#seta)"/>
+        <path d="M418,273 L452,273" class="svg-linha" marker-end="url(#seta)"/>
+        <path d="M418,273 C434,273 434,398 452,398" class="svg-linha" marker-end="url(#seta)"/>
+
+        <rect x="456" y="98" width="298" height="100" rx="9" class="svg-caixa"/>
+        <text x="474" y="126" class="svg-tit">nó A · EC2 t3.micro</text>
+        <text x="474" y="150" class="svg-mono">Lamport L=87</text>
+        <text x="474" y="172" class="svg-mono-suave">FastAPI + uvicorn · 1 worker</text>
+
+        <rect x="456" y="223" width="298" height="100" rx="9" class="svg-caixa"/>
+        <text x="474" y="251" class="svg-tit">nó B · EC2 t3.micro</text>
+        <text x="474" y="275" class="svg-mono">Lamport L=87</text>
+        <text x="474" y="297" class="svg-mono-suave">conexões WebSocket em memória</text>
+
+        <rect x="456" y="348" width="298" height="100" rx="9" class="svg-caixa"/>
+        <text x="474" y="376" class="svg-tit">nó C · EC2 t3.micro</text>
+        <text x="474" y="400" class="svg-mono">Lamport L=87</text>
+        <text x="474" y="422" class="svg-mono-suave">sem estado compartilhado entre nós</text>
+
+        <text x="456" y="484" class="svg-rot">nenhum nó conhece outro nó</text>
+
+        <!-- canal Pub/Sub -->
+        <path d="M758,148 L868,120" class="svg-fluxo svg-pulso" marker-end="url(#seta-c)" marker-start="url(#seta-c)"/>
+        <path d="M758,273 L868,196" class="svg-fluxo svg-pulso" marker-end="url(#seta-c)" marker-start="url(#seta-c)"/>
+        <path d="M758,398 L868,272" class="svg-fluxo svg-pulso" marker-end="url(#seta-c)" marker-start="url(#seta-c)"/>
+        <text x="812" y="98" class="svg-rot" text-anchor="middle">publish</text>
+        <text x="812" y="116" class="svg-rot" text-anchor="middle">subscribe</text>
+
+        <!-- Redis -->
+        <rect x="872" y="58" width="360" height="272" rx="10" class="svg-caixa-forte"/>
+        <text x="892" y="88" class="svg-tit">ElastiCache for Redis 7</text>
+        <text x="892" y="108" class="svg-txt">subrede privada · sem rota para a internet</text>
+        <line x1="892" y1="122" x2="1212" y2="122" class="svg-linha" stroke-width="1"/>
+
+        <rect x="892" y="134" width="8" height="8" class="p-ambar"/>
+        <text x="910" y="143" class="svg-mono">PUB/SUB chat:room:{id}</text>
+        <text x="910" y="161" class="svg-txt">difusão para todos os nós (fan-out)</text>
+
+        <rect x="892" y="180" width="8" height="8" class="p-ciano"/>
+        <text x="910" y="189" class="svg-mono">INCR chat:seq:{id}</text>
+        <text x="910" y="207" class="svg-txt">sequenciador — define a ordem total</text>
+
+        <rect x="892" y="226" width="8" height="8" class="p-suave"/>
+        <text x="910" y="235" class="svg-mono">ZSET chat:presence:{id}</text>
+        <text x="910" y="253" class="svg-txt">presença, varrida em ≤ 15 s</text>
+
+        <rect x="892" y="272" width="8" height="8" class="p-suave"/>
+        <text x="910" y="281" class="svg-mono">ZSET chat:nodes</text>
+        <text x="910" y="299" class="svg-txt">nós vivos — alimenta o painel da demo</text>
+
+        <!-- DynamoDB -->
+        <path d="M772,462 L868,432" class="svg-fraco" marker-end="url(#seta-s)" marker-start="url(#seta-s)"/>
+        <rect x="872" y="370" width="360" height="136" rx="10" class="svg-caixa"/>
+        <text x="892" y="400" class="svg-tit">DynamoDB · salaviva_messages</text>
+        <text x="892" y="424" class="svg-mono">PK room_id · SK seq</text>
+        <text x="892" y="448" class="svg-txt">PutItem assíncrono — fora do caminho crítico</text>
+        <text x="892" y="470" class="svg-txt">Query seq &gt; last_seq → replay na reconexão</text>
+        <text x="892" y="492" class="svg-mono-suave">TTL 7 dias · Gateway Endpoint (sem custo)</text>
+      </svg>
+    </div>
+
+    <ol class="passos passos--fluxo" style="grid-template-columns:repeat(6,1fr);gap:.9rem">
+      <li><span><code>send</code> pelo WebSocket ao nó A</span></li>
+      <li><span>JWT, idempotência e <code>lamport.tick()</code></span></li>
+      <li><span><code>INCR</code> → <b>seq</b>: a ordem total nasce aqui</span></li>
+      <li><span><code>PUBLISH</code> no canal da sala</span></li>
+      <li><span>Todos os nós recebem — <b>inclusive o emissor</b></span></li>
+      <li><span>Hold-back reordena por <code>seq</code> e exibe</span></li>
+    </ol>
+  </div>
+
+  <div class="rodape">
+    <span><b>Componentes:</b> ALB · ASG (EC2 <code>t3.micro</code>) · ElastiCache Redis · DynamoDB · ECR · CloudWatch Logs · Terraform</span>
+    <span style="color:var(--brasa)">Derrubar um nó agora: painel em ≤ 15 s · ALB em ≤ 45 s · cliente reconecta &lt; 5 s · <b>0 mensagens perdidas</b></span>
+  </div>
+</section>
+
+<!-- ================================================= SLIDE 9 · TECNOLOGIAS -->
+<section class="slide" data-nome="Tecnologias" data-tempo="0:50" aria-label="Slide 9 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=09</b><i>·</i>Tecnologias</p>
+    <h2 class="titulo">O que está rodando</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo" style="align-content:center;gap:1.6rem">
+    <div class="grupos">
+      <div class="grupo"><h3>Linguagens</h3>
+        <ul class="chips">
+          <li class="forte">Python 3.13</li><li>JavaScript ES2022</li>
+          <li>HCL (Terraform)</li><li>Bash</li>
+        </ul></div>
+      <div class="grupo"><h3>Frameworks</h3>
+        <ul class="chips">
+          <li class="forte">FastAPI</li><li>Uvicorn + uvloop</li>
+          <li>Starlette WebSocket</li><li>Pydantic v2</li>
+        </ul></div>
+      <div class="grupo"><h3>Banco de dados</h3>
+        <ul class="chips">
+          <li class="forte">ElastiCache Redis 7.1</li><li>DynamoDB on-demand</li>
+          <li>TTL 7 dias</li><li>DynamoDB Local</li>
+        </ul></div>
+      <div class="grupo"><h3>Bibliotecas</h3>
+        <ul class="chips">
+          <li>redis.asyncio</li><li>aioboto3</li><li>PyJWT</li>
+          <li>structlog</li><li>websockets</li><li>pytest</li>
+          <li>ruff</li><li>matplotlib</li>
+        </ul></div>
+      <div class="grupo"><h3>Infra e operação</h3>
+        <ul class="chips">
+          <li class="forte">Terraform</li><li>Docker + Compose</li><li>ECR</li>
+          <li>EC2 em ASG</li><li>ALB</li><li>CloudWatch Logs</li>
+          <li>SSM Parameter Store</li><li>uv</li>
+        </ul></div>
+    </div>
+
+    <div class="grade grade--2">
+      <div class="cartao"><h3>Uma escolha que precisa de explicação</h3>
+        <p><strong>Um worker por nó.</strong> Cada nó guarda estado em memória — conexões WebSocket e
+          relógio lógico. Dois workers na mesma máquina seriam dois processos com relógios
+          independentes e sem canal entre eles: descaracterizaria o algoritmo de Lamport.</p></div>
+      <div class="cartao"><h3>Concorrência</h3>
+        <p><code>asyncio</code> dá concorrência cooperativa: milhares de conexões WebSocket em um
+          processo, sem uma thread por conexão. Todo I/O é assíncrono — um cliente bloqueante
+          travaria o event loop e derrubaria as conexões do nó inteiro.</p></div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span>Cliente web <b>sem etapa de build</b>: servido pelo próprio backend, o avaliador não roda <code>npm install</code>.</span>
+  </div>
+</section>
+
+<!-- ================================================== SLIDE 10 · CONCLUSÃO -->
+<section class="slide" data-nome="Conclusão" data-tempo="1:20" aria-label="Slide 10 de 10">
+  <header class="cabeca">
+    <p class="olho"><b>seq=10</b><i>·</i>Conclusão</p>
+    <h2 class="titulo">O que foi verificado, e o que não foi resolvido</h2>
+    <div class="regua"></div>
+  </header>
+
+  <div class="corpo" style="gap:1.3rem;align-content:center">
+    <div class="painel-num">
+      <div class="num-item"><span class="v">OK</span>
+        <span class="k">ordem total em todas as salas · 0 divergências entre clientes</span></div>
+      <div class="num-item"><span class="v">1.200</span>
+        <span class="k">conexões WebSocket simultâneas · 0 falhas de conexão</span></div>
+      <div class="num-item"><span class="v">37 ms</span>
+        <span class="k">latência p95 fim a fim · meta era &lt; 200 ms</span></div>
+      <div class="num-item"><span class="v">0</span>
+        <span class="k">mensagens perdidas ao derrubar um nó</span></div>
+    </div>
+
+    <div class="grade grade--2" style="gap:1.4rem">
+      <div>
+        <p class="olho" style="margin-bottom:.7rem"><b>Limitações</b><i>·</i>assumidas, não escondidas</p>
+        <ul class="lista" style="gap:.6rem">
+          <li><strong>ElastiCache single-node é ponto único de falha.</strong> Se o Redis cai, nada é ordenado e o chat para. Multi-AZ ficou fora por custo.</li>
+          <li><strong>Redis Pub/Sub é at-most-once.</strong> Mitigado pelo replay no DynamoDB — não resolvido no canal.</li>
+          <li><strong>O sequenciador serializa por sala.</strong> O teto de escrita de uma sala é o teto do <code>INCR</code>.</li>
+          <li><strong>Relógio vetorial cresce O(n)</strong> no número de nós, dentro de cada envelope.</li>
+          <li><strong>EC2 em subrede pública</strong> (sem NAT): desvio consciente de boa prática, por custo.</li>
+        </ul>
+      </div>
+      <div>
+        <p class="olho" style="margin-bottom:.7rem"><b>Próximos passos</b></p>
+        <ul class="lista" style="gap:.6rem">
+          <li><strong>ElastiCache Multi-AZ</strong> com réplica e failover automático — remove o ponto único de falha</li>
+          <li><strong>Redis Streams</strong> no lugar do Pub/Sub: entrega at-least-once com confirmação por consumidor</li>
+          <li><strong>Particionar o sequenciador</strong> para salas de altíssimo volume</li>
+          <li><strong>WSS com domínio próprio</strong> e certificado ACM no ALB</li>
+          <li><strong>Compactar o relógio vetorial</strong> (índices em vez de <code>node_id</code>)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    <span>Números medidos no <b>cluster de 3 nós</b> com <code>loadtest/run_load.py</code> — a ferramenta e os resultados estão no repositório.</span>
+    <span class="marca">SalaViva · obrigado</span>
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<div class="hud">
+  <span class="logo">Sala<b>Viva</b></span>
+  <span class="cont"><b id="hud-n">01</b>/10</span>
+  <span class="relogio" id="relogio" title="Cronômetro: C inicia/pausa, R zera">00:00</span>
+</div>
+
+<nav class="trilho" id="trilho" aria-label="Navegação entre slides"></nav>
+<p class="dica">← → navega · F tela cheia · ? ajuda</p>
+
+<div class="ajuda" id="ajuda" role="dialog" aria-modal="true" aria-label="Atalhos de teclado">
+  <div class="ajuda-cx">
+    <h3>Atalhos</h3>
+    <dl>
+      <dt>→ ↓ Espaço PgDn</dt><dd>próximo slide</dd>
+      <dt>← ↑ PgUp</dt><dd>slide anterior</dd>
+      <dt>Home / End</dt><dd>primeiro / último</dd>
+      <dt>1 … 9 · 0</dt><dd>ir direto ao slide (0 = slide 10)</dd>
+      <dt>F</dt><dd>tela cheia</dd>
+      <dt>T</dt><dd>alternar tema claro / escuro</dd>
+      <dt>C</dt><dd>cronômetro: inicia e pausa</dd>
+      <dt>R</dt><dd>zerar o cronômetro</dd>
+      <dt>P</dt><dd>imprimir / exportar PDF</dd>
+      <dt>? ou Esc</dt><dd>abre e fecha esta ajuda</dd>
+    </dl>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var slides  = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var trilho  = document.getElementById("trilho");
+  var hudN    = document.getElementById("hud-n");
+  var ajuda   = document.getElementById("ajuda");
+  var relogio = document.getElementById("relogio");
+  var atual   = 0;
+
+  /* ---------------------------------------------------------- navegação -- */
+
+  slides.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-label", "Slide " + (i+1) + ": " + (s.dataset.nome || ""));
+    b.title = (i+1) + " · " + (s.dataset.nome || "") + " · alvo " + (s.dataset.tempo || "");
+    b.addEventListener("click", function(){ mostrar(i); });
+    trilho.appendChild(b);
+  });
+  var ticks = Array.prototype.slice.call(trilho.children);
+
+  function mostrar(i){
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    /* na carga inicial o slide 1 já vem com .ativo no HTML (funciona sem JS):
+       nesse caso não trocamos classes, mas o HUD e o trilho precisam sincronizar */
+    if (i !== atual || !slides[i].classList.contains("ativo")) {
+      slides[atual].classList.remove("ativo");
+      atual = i;
+      void slides[atual].offsetWidth;   /* reinicia a animação de entrada */
+      slides[atual].classList.add("ativo");
+    }
+
+    hudN.textContent = String(atual + 1).padStart(2, "0");
+    ticks.forEach(function(t, k){
+      t.classList.toggle("aqui", k === atual);
+      t.classList.toggle("visto", k < atual);
+    });
+    if (history.replaceState) { history.replaceState(null, "", "#" + (atual + 1)); }
+  }
+
+  function proximo(){ mostrar(atual + 1); }
+  function anterior(){ mostrar(atual - 1); }
+
+  /* ------------------------------------------------------------ teclado -- */
+
+  document.addEventListener("keydown", function(e){
+    if (e.metaKey || e.ctrlKey || e.altKey) { return; }
+    var k = e.key;
+
+    if (ajuda.classList.contains("aberta") && (k === "Escape" || k === "?" || k === "/")) {
+      ajuda.classList.remove("aberta"); e.preventDefault(); return;
+    }
+
+    switch (k) {
+      case "ArrowRight": case "ArrowDown": case " ": case "PageDown": case "Enter":
+        proximo(); e.preventDefault(); break;
+      case "ArrowLeft": case "ArrowUp": case "PageUp": case "Backspace":
+        anterior(); e.preventDefault(); break;
+      case "Home": mostrar(0); e.preventDefault(); break;
+      case "End":  mostrar(slides.length - 1); e.preventDefault(); break;
+      case "f": case "F": telaCheia(); e.preventDefault(); break;
+      case "t": case "T": tema(); e.preventDefault(); break;
+      case "c": case "C": cronometro(); e.preventDefault(); break;
+      case "r": case "R": zerar(); e.preventDefault(); break;
+      case "p": case "P": window.print(); e.preventDefault(); break;
+      case "?": case "/": ajuda.classList.add("aberta"); e.preventDefault(); break;
+      case "Escape": ajuda.classList.remove("aberta"); break;
+      default:
+        if (/^[0-9]$/.test(k)) {
+          mostrar(k === "0" ? 9 : parseInt(k, 10) - 1);
+          e.preventDefault();
+        }
+    }
+  });
+
+  ajuda.addEventListener("click", function(){ ajuda.classList.remove("aberta"); });
+
+  /* -------------------------------------------------------------- toque -- */
+
+  var x0 = null, y0 = null;
+  document.addEventListener("touchstart", function(e){
+    x0 = e.changedTouches[0].clientX; y0 = e.changedTouches[0].clientY;
+  }, { passive: true });
+  document.addEventListener("touchend", function(e){
+    if (x0 === null) { return; }
+    var dx = e.changedTouches[0].clientX - x0;
+    var dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)) { dx < 0 ? proximo() : anterior(); }
+    x0 = null; y0 = null;
+  }, { passive: true });
+
+  /* ------------------------------------------------------------ recursos -- */
+
+  function telaCheia(){
+    if (document.fullscreenElement) { document.exitFullscreen(); }
+    else if (document.documentElement.requestFullscreen) { document.documentElement.requestFullscreen(); }
+  }
+
+  function tema(){
+    var raiz = document.documentElement;
+    raiz.dataset.tema = raiz.dataset.tema === "claro" ? "escuro" : "claro";
+    try { localStorage.setItem("salaviva-tema", raiz.dataset.tema); } catch (err) {}
+  }
+  try {
+    var salvo = localStorage.getItem("salaviva-tema");
+    if (salvo) { document.documentElement.dataset.tema = salvo; }
+  } catch (err) {}
+
+  /* cronômetro: a apresentação tem 15 minutos, e o deck avisa */
+  var t0 = null, acumulado = 0, tid = null;
+
+  function pinta(seg){
+    relogio.textContent = String(Math.floor(seg / 60)).padStart(2, "0") + ":" +
+                          String(Math.floor(seg % 60)).padStart(2, "0");
+    relogio.classList.toggle("ligado",    t0 !== null && seg < 780);
+    relogio.classList.toggle("perto",     seg >= 780 && seg < 900);
+    relogio.classList.toggle("estourou",  seg >= 900);
+  }
+
+  function decorrido(){ return acumulado + (t0 === null ? 0 : (Date.now() - t0) / 1000); }
+
+  function cronometro(){
+    if (t0 === null) {
+      t0 = Date.now();
+      tid = setInterval(function(){ pinta(decorrido()); }, 500);
+    } else {
+      acumulado = decorrido(); t0 = null;
+      clearInterval(tid); tid = null;
+    }
+    pinta(decorrido());
+  }
+
+  function zerar(){
+    acumulado = 0; t0 = null;
+    if (tid) { clearInterval(tid); tid = null; }
+    pinta(0);
+  }
+
+  /* ------------------------------------------------------------- início -- */
+
+  var inicial = parseInt((location.hash || "").replace("#", ""), 10);
+  mostrar(isNaN(inicial) ? 0 : inicial - 1);
+  window.addEventListener("hashchange", function(){
+    var n = parseInt((location.hash || "").replace("#", ""), 10);
+    if (!isNaN(n)) { mostrar(n - 1); }
+  });
+})();
+</script>
+</body>
+</html>

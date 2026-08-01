@@ -1,0 +1,96 @@
+[project]
+name = "salaviva"
+version = "1.0.0"
+description = "Chat distribuído em tempo real com salas (Pub/Sub) — Projeto Final de Sistemas Distribuídos"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.6.0",
+    "redis>=5.2.0",
+    "aioboto3>=13.2.0",
+    "pyjwt>=2.9.0",
+    "structlog>=24.4.0",
+    "websockets>=13.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.7.0",
+    "httpx>=0.27.0",
+]
+loadtest = [
+    "matplotlib>=3.9.0",
+]
+
+[project.scripts]
+salaviva-cli = "client.cli.salaviva_cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/salaviva"]
+
+# ---------------------------------------------------------------------------
+# Ruff — formatação e lint em um único binário (ver standards/coding-standards.md)
+# ---------------------------------------------------------------------------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests", "client", "loadtest"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "ASYNC", "S", "C4", "SIM", "RUF", "BLE", "PL"]
+ignore = [
+    "S104",     # bind 0.0.0.0 é intencional: o container precisa aceitar tráfego do ALB
+    "B008",     # Depends() no default de parâmetro é o idioma do FastAPI
+    "PLR0913",  # os composition roots recebem uma dependência por porta, por construção
+    "PLR2004",  # constantes numéricas em asserções de teste são mais legíveis inline
+]
+
+[tool.ruff.lint.per-file-ignores]
+# N818 exige o sufixo "Error" em toda exceção. A classe raiz (SalaVivaError) o
+# tem; as subclasses são nomeadas pelo código de protocolo que representam
+# (RoomNotFound, RateLimitExceeded), porque é esse nome que aparece no contrato
+# com o cliente em docs/protocolo.md. Renomear divergiria código de documento.
+"src/salaviva/domain/errors.py" = ["N818"]
+"tests/**" = ["S101", "S105", "S106", "S311", "ASYNC", "SLF001", "PLC0415"]
+"loadtest/**" = ["S101", "S311", "PLC0415"]
+"client/**" = ["S105", "S106", "S311", "PLC0415"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["salaviva"]
+
+# ---------------------------------------------------------------------------
+# Pytest
+# ---------------------------------------------------------------------------
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-q --strict-markers"
+markers = [
+    "e2e: exige o cluster Docker Compose ativo (make up)",
+    "slow: teste demorado",
+]
+
+[tool.coverage.run]
+source = ["src/salaviva"]
+omit = ["*/static/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]

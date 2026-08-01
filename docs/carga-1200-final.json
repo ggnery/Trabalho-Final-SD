@@ -1,0 +1,1654 @@
+{
+  "meta": {
+    "ferramenta": "loadtest/run_load.py",
+    "versao": "1.0.0",
+    "inicio": "2026-08-01T17:30:59.564178+00:00",
+    "fim": "2026-08-01T17:32:01.223917+00:00",
+    "duracao_real_s": 61.66,
+    "python": "3.13.5",
+    "plataforma": "macOS-26.3.1-arm64-arm-64bit-Mach-O",
+    "parametros": {
+      "url": "http://localhost:8080",
+      "clients": 1200,
+      "rooms": 120,
+      "duration": 30.0,
+      "rate": 0.15,
+      "ramp": 25.0,
+      "drain": 5.0,
+      "payload": 64,
+      "reconnect": false,
+      "seed": 42
+    },
+    "clientes_por_sala": 10.0,
+    "limite_descritores": {
+      "suportado": true,
+      "necessario": 1200,
+      "limite_inicial": 16384,
+      "limite_efetivo": 16384,
+      "limite_rigido": "ilimitado",
+      "suficiente": true
+    }
+  },
+  "conexoes": {
+    "solicitadas": 1200,
+    "estabelecidas": 1200,
+    "falhas": 0,
+    "taxa_sucesso_pct": 100.0,
+    "pico_simultaneas": 1200,
+    "resyncs_pedidos": 0,
+    "sessoes_abertas": 1200,
+    "quedas_durante_o_teste": 0,
+    "reconexoes_falhas": 0,
+    "falhas_por_motivo": {},
+    "falhas_de_login": {},
+    "por_no": {
+      "node-c": 400,
+      "node-b": 400,
+      "node-a": 400
+    }
+  },
+  "handshake_ms": {
+    "amostras": 1200,
+    "min": 1.79,
+    "media": 4.0,
+    "p50": 3.18,
+    "p90": 6.44,
+    "p95": 7.73,
+    "p99": 18.49,
+    "max": 60.42
+  },
+  "conexao_tcp_ms": {
+    "amostras": 1200,
+    "min": 1.78,
+    "media": 3.98,
+    "p50": 3.16,
+    "p90": 6.42,
+    "p95": 7.7,
+    "p99": 18.47,
+    "max": 60.4
+  },
+  "latencia_ms": {
+    "amostras": 5417,
+    "min": 5.17,
+    "media": 9.68,
+    "p50": 6.66,
+    "p90": 13.77,
+    "p95": 18.17,
+    "p99": 65.59,
+    "max": 147.47
+  },
+  "latencia_ms_execucao_completa": {
+    "amostras": 7642,
+    "min": 5.16,
+    "media": 10.07,
+    "p50": 6.72,
+    "p90": 14.8,
+    "p95": 19.78,
+    "p99": 69.39,
+    "max": 154.63
+  },
+  "mensagens": {
+    "enviadas": 7642,
+    "ecos_recebidos": 7642,
+    "sem_eco_ao_final": 0,
+    "acks": 7642,
+    "entregues_total": 69044,
+    "erros_do_protocolo": {}
+  },
+  "throughput": {
+    "publicadas_por_s": 180.4,
+    "entregues_por_s": 1805.5,
+    "pico_entregues_por_s": 2036,
+    "fan_out_medio": 9.03,
+    "janela": "estável (após a rampa)"
+  },
+  "series_temporais": {
+    "t_s": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59
+    ],
+    "entregues_por_s": [
+      5,
+      12,
+      22,
+      34,
+      64,
+      84,
+      140,
+      156,
+      183,
+      247,
+      295,
+      426,
+      513,
+      534,
+      609,
+      634,
+      769,
+      837,
+      973,
+      1190,
+      1198,
+      1316,
+      1369,
+      1609,
+      1659,
+      2036,
+      1770,
+      1800,
+      1702,
+      1768,
+      1701,
+      1914,
+      1845,
+      1940,
+      1690,
+      1809,
+      1821,
+      1654,
+      1883,
+      1891,
+      1802,
+      1740,
+      1751,
+      1789,
+      1740,
+      1990,
+      1770,
+      1800,
+      1756,
+      1714,
+      1701,
+      1837,
+      1922,
+      1937,
+      1693,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "enviadas_por_s": [
+      5,
+      12,
+      20,
+      23,
+      33,
+      39,
+      51,
+      50,
+      54,
+      66,
+      69,
+      90,
+      103,
+      97,
+      104,
+      103,
+      114,
+      119,
+      132,
+      152,
+      146,
+      153,
+      154,
+      171,
+      170,
+      199,
+      177,
+      180,
+      178,
+      170,
+      171,
+      190,
+      185,
+      193,
+      169,
+      186,
+      177,
+      169,
+      185,
+      191,
+      179,
+      176,
+      174,
+      179,
+      172,
+      199,
+      177,
+      180,
+      178,
+      170,
+      171,
+      190,
+      185,
+      193,
+      169,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "conexoes_ativas": [
+      0,
+      48,
+      95,
+      144,
+      192,
+      239,
+      288,
+      336,
+      384,
+      432,
+      479,
+      528,
+      576,
+      623,
+      671,
+      720,
+      768,
+      815,
+      863,
+      911,
+      960,
+      1008,
+      1056,
+      1103,
+      1150,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200,
+      1200
+    ],
+    "latencia_p95_ms": [
+      7.69,
+      24.24,
+      16.36,
+      10.91,
+      32.65,
+      10.86,
+      12.06,
+      25.31,
+      12.56,
+      11.59,
+      14.5,
+      11.28,
+      12.8,
+      16.27,
+      12.72,
+      56.4,
+      14.53,
+      15.42,
+      49.66,
+      18.76,
+      48.18,
+      23.92,
+      54.54,
+      18.98,
+      88.2,
+      31.84,
+      15.45,
+      14.53,
+      16.25,
+      44.4,
+      16.57,
+      88.5,
+      14.16,
+      16.56,
+      18.25,
+      16.08,
+      15.1,
+      21.66,
+      11.86,
+      15.36,
+      17.02,
+      34.25,
+      14.62,
+      15.51,
+      21.81,
+      53.8,
+      14.43,
+      17.59,
+      17.13,
+      13.53,
+      16.43,
+      19.22,
+      31.59,
+      19.56,
+      37.13,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "ordem": {
+    "veredito": "OK",
+    "salas_verificadas": 120,
+    "salas_ok": 120,
+    "salas_sem_quorum": [],
+    "clientes_verificados": 1200,
+    "mensagens_verificadas": 5637,
+    "chegadas_fora_de_ordem": 10,
+    "clientes_com_chegada_ja_ordenada": 1190,
+    "divergencias_totais": 0,
+    "divergencias": [],
+    "divergencias_omitidas": 0,
+    "por_sala": [
+      {
+        "sala": "carga-000",
+        "clientes": 10,
+        "janela_comum": [
+          2464,
+          2512
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-001",
+        "clientes": 10,
+        "janela_comum": [
+          2478,
+          2525
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-002",
+        "clientes": 10,
+        "janela_comum": [
+          2419,
+          2465
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-003",
+        "clientes": 10,
+        "janela_comum": [
+          2510,
+          2557
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-004",
+        "clientes": 10,
+        "janela_comum": [
+          2412,
+          2460
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-005",
+        "clientes": 10,
+        "janela_comum": [
+          2386,
+          2433
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-006",
+        "clientes": 10,
+        "janela_comum": [
+          2371,
+          2419
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-007",
+        "clientes": 10,
+        "janela_comum": [
+          2440,
+          2487
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-008",
+        "clientes": 10,
+        "janela_comum": [
+          2419,
+          2465
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-009",
+        "clientes": 10,
+        "janela_comum": [
+          2532,
+          2581
+        ],
+        "mensagens_verificadas": 50,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-010",
+        "clientes": 10,
+        "janela_comum": [
+          673,
+          719
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-011",
+        "clientes": 10,
+        "janela_comum": [
+          688,
+          737
+        ],
+        "mensagens_verificadas": 50,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-012",
+        "clientes": 10,
+        "janela_comum": [
+          693,
+          741
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-013",
+        "clientes": 10,
+        "janela_comum": [
+          679,
+          723
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-014",
+        "clientes": 10,
+        "janela_comum": [
+          671,
+          719
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-015",
+        "clientes": 10,
+        "janela_comum": [
+          686,
+          734
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-016",
+        "clientes": 10,
+        "janela_comum": [
+          701,
+          748
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-017",
+        "clientes": 10,
+        "janela_comum": [
+          704,
+          752
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-018",
+        "clientes": 10,
+        "janela_comum": [
+          684,
+          732
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-019",
+        "clientes": 10,
+        "janela_comum": [
+          684,
+          732
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-020",
+        "clientes": 10,
+        "janela_comum": [
+          682,
+          731
+        ],
+        "mensagens_verificadas": 50,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-021",
+        "clientes": 10,
+        "janela_comum": [
+          695,
+          744
+        ],
+        "mensagens_verificadas": 50,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-022",
+        "clientes": 10,
+        "janela_comum": [
+          700,
+          747
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-023",
+        "clientes": 10,
+        "janela_comum": [
+          678,
+          726
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-024",
+        "clientes": 10,
+        "janela_comum": [
+          671,
+          720
+        ],
+        "mensagens_verificadas": 50,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-025",
+        "clientes": 10,
+        "janela_comum": [
+          678,
+          724
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-026",
+        "clientes": 10,
+        "janela_comum": [
+          700,
+          747
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-027",
+        "clientes": 10,
+        "janela_comum": [
+          694,
+          742
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-028",
+        "clientes": 10,
+        "janela_comum": [
+          686,
+          734
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-029",
+        "clientes": 10,
+        "janela_comum": [
+          675,
+          723
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-030",
+        "clientes": 10,
+        "janela_comum": [
+          523,
+          569
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-031",
+        "clientes": 10,
+        "janela_comum": [
+          522,
+          570
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-032",
+        "clientes": 10,
+        "janela_comum": [
+          542,
+          589
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-033",
+        "clientes": 10,
+        "janela_comum": [
+          534,
+          583
+        ],
+        "mensagens_verificadas": 50,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-034",
+        "clientes": 10,
+        "janela_comum": [
+          523,
+          570
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-035",
+        "clientes": 10,
+        "janela_comum": [
+          527,
+          573
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-036",
+        "clientes": 10,
+        "janela_comum": [
+          551,
+          599
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-037",
+        "clientes": 10,
+        "janela_comum": [
+          536,
+          583
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-038",
+        "clientes": 10,
+        "janela_comum": [
+          531,
+          580
+        ],
+        "mensagens_verificadas": 50,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-039",
+        "clientes": 10,
+        "janela_comum": [
+          517,
+          563
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-040",
+        "clientes": 10,
+        "janela_comum": [
+          521,
+          569
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-041",
+        "clientes": 10,
+        "janela_comum": [
+          541,
+          588
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-042",
+        "clientes": 10,
+        "janela_comum": [
+          524,
+          570
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-043",
+        "clientes": 10,
+        "janela_comum": [
+          501,
+          547
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-044",
+        "clientes": 10,
+        "janela_comum": [
+          514,
+          560
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-045",
+        "clientes": 10,
+        "janela_comum": [
+          523,
+          565
+        ],
+        "mensagens_verificadas": 43,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-046",
+        "clientes": 10,
+        "janela_comum": [
+          528,
+          574
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-047",
+        "clientes": 10,
+        "janela_comum": [
+          546,
+          591
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-048",
+        "clientes": 10,
+        "janela_comum": [
+          531,
+          578
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-049",
+        "clientes": 10,
+        "janela_comum": [
+          523,
+          569
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-050",
+        "clientes": 10,
+        "janela_comum": [
+          539,
+          585
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-051",
+        "clientes": 10,
+        "janela_comum": [
+          536,
+          583
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-052",
+        "clientes": 10,
+        "janela_comum": [
+          504,
+          552
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-053",
+        "clientes": 10,
+        "janela_comum": [
+          516,
+          562
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-054",
+        "clientes": 10,
+        "janela_comum": [
+          518,
+          563
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-055",
+        "clientes": 10,
+        "janela_comum": [
+          507,
+          550
+        ],
+        "mensagens_verificadas": 44,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-056",
+        "clientes": 10,
+        "janela_comum": [
+          528,
+          571
+        ],
+        "mensagens_verificadas": 44,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-057",
+        "clientes": 10,
+        "janela_comum": [
+          524,
+          571
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-058",
+        "clientes": 10,
+        "janela_comum": [
+          532,
+          578
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-059",
+        "clientes": 10,
+        "janela_comum": [
+          530,
+          575
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-060",
+        "clientes": 10,
+        "janela_comum": [
+          318,
+          362
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-061",
+        "clientes": 10,
+        "janela_comum": [
+          335,
+          381
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-062",
+        "clientes": 10,
+        "janela_comum": [
+          333,
+          380
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-063",
+        "clientes": 10,
+        "janela_comum": [
+          343,
+          388
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-064",
+        "clientes": 10,
+        "janela_comum": [
+          343,
+          391
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-065",
+        "clientes": 10,
+        "janela_comum": [
+          329,
+          374
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-066",
+        "clientes": 10,
+        "janela_comum": [
+          325,
+          368
+        ],
+        "mensagens_verificadas": 44,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-067",
+        "clientes": 10,
+        "janela_comum": [
+          341,
+          389
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-068",
+        "clientes": 10,
+        "janela_comum": [
+          338,
+          383
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-069",
+        "clientes": 10,
+        "janela_comum": [
+          338,
+          383
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-070",
+        "clientes": 10,
+        "janela_comum": [
+          331,
+          373
+        ],
+        "mensagens_verificadas": 43,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-071",
+        "clientes": 10,
+        "janela_comum": [
+          337,
+          384
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-072",
+        "clientes": 10,
+        "janela_comum": [
+          339,
+          385
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-073",
+        "clientes": 10,
+        "janela_comum": [
+          323,
+          365
+        ],
+        "mensagens_verificadas": 43,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-074",
+        "clientes": 10,
+        "janela_comum": [
+          330,
+          375
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-075",
+        "clientes": 10,
+        "janela_comum": [
+          324,
+          369
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-076",
+        "clientes": 10,
+        "janela_comum": [
+          337,
+          383
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-077",
+        "clientes": 10,
+        "janela_comum": [
+          329,
+          374
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-078",
+        "clientes": 10,
+        "janela_comum": [
+          330,
+          373
+        ],
+        "mensagens_verificadas": 44,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-079",
+        "clientes": 10,
+        "janela_comum": [
+          331,
+          374
+        ],
+        "mensagens_verificadas": 44,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-080",
+        "clientes": 10,
+        "janela_comum": [
+          327,
+          374
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-081",
+        "clientes": 10,
+        "janela_comum": [
+          325,
+          370
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-082",
+        "clientes": 10,
+        "janela_comum": [
+          324,
+          368
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-083",
+        "clientes": 10,
+        "janela_comum": [
+          330,
+          377
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-084",
+        "clientes": 10,
+        "janela_comum": [
+          335,
+          380
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-085",
+        "clientes": 10,
+        "janela_comum": [
+          335,
+          381
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-086",
+        "clientes": 10,
+        "janela_comum": [
+          333,
+          379
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-087",
+        "clientes": 10,
+        "janela_comum": [
+          329,
+          374
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-088",
+        "clientes": 10,
+        "janela_comum": [
+          332,
+          377
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-089",
+        "clientes": 10,
+        "janela_comum": [
+          330,
+          377
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-090",
+        "clientes": 10,
+        "janela_comum": [
+          333,
+          377
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-091",
+        "clientes": 10,
+        "janela_comum": [
+          331,
+          377
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-092",
+        "clientes": 10,
+        "janela_comum": [
+          333,
+          381
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-093",
+        "clientes": 10,
+        "janela_comum": [
+          340,
+          388
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-094",
+        "clientes": 10,
+        "janela_comum": [
+          329,
+          375
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-095",
+        "clientes": 10,
+        "janela_comum": [
+          324,
+          369
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-096",
+        "clientes": 10,
+        "janela_comum": [
+          322,
+          366
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-097",
+        "clientes": 10,
+        "janela_comum": [
+          326,
+          372
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-098",
+        "clientes": 10,
+        "janela_comum": [
+          321,
+          365
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-099",
+        "clientes": 10,
+        "janela_comum": [
+          330,
+          376
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-100",
+        "clientes": 10,
+        "janela_comum": [
+          322,
+          366
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-101",
+        "clientes": 10,
+        "janela_comum": [
+          324,
+          367
+        ],
+        "mensagens_verificadas": 44,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-102",
+        "clientes": 10,
+        "janela_comum": [
+          335,
+          382
+        ],
+        "mensagens_verificadas": 48,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-103",
+        "clientes": 10,
+        "janela_comum": [
+          322,
+          366
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-104",
+        "clientes": 10,
+        "janela_comum": [
+          327,
+          370
+        ],
+        "mensagens_verificadas": 44,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-105",
+        "clientes": 10,
+        "janela_comum": [
+          334,
+          378
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-106",
+        "clientes": 10,
+        "janela_comum": [
+          331,
+          375
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-107",
+        "clientes": 10,
+        "janela_comum": [
+          327,
+          373
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-108",
+        "clientes": 10,
+        "janela_comum": [
+          327,
+          373
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-109",
+        "clientes": 10,
+        "janela_comum": [
+          320,
+          361
+        ],
+        "mensagens_verificadas": 42,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-110",
+        "clientes": 10,
+        "janela_comum": [
+          323,
+          369
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-111",
+        "clientes": 10,
+        "janela_comum": [
+          336,
+          382
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-112",
+        "clientes": 10,
+        "janela_comum": [
+          327,
+          375
+        ],
+        "mensagens_verificadas": 49,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-113",
+        "clientes": 10,
+        "janela_comum": [
+          332,
+          376
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-114",
+        "clientes": 10,
+        "janela_comum": [
+          327,
+          372
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-115",
+        "clientes": 10,
+        "janela_comum": [
+          326,
+          371
+        ],
+        "mensagens_verificadas": 46,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-116",
+        "clientes": 10,
+        "janela_comum": [
+          323,
+          366
+        ],
+        "mensagens_verificadas": 44,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-117",
+        "clientes": 10,
+        "janela_comum": [
+          334,
+          378
+        ],
+        "mensagens_verificadas": 45,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-118",
+        "clientes": 10,
+        "janela_comum": [
+          330,
+          376
+        ],
+        "mensagens_verificadas": 47,
+        "clientes_divergentes": 0
+      },
+      {
+        "sala": "carga-119",
+        "clientes": 10,
+        "janela_comum": [
+          319,
+          359
+        ],
+        "mensagens_verificadas": 41,
+        "clientes_divergentes": 0
+      }
+    ]
+  },
+  "metas": {
+    "latencia_p95_ms": {
+      "meta": 200.0,
+      "medido": 18.17,
+      "atingida": true
+    },
+    "latencia_p99_ms": {
+      "meta": 500.0,
+      "medido": 65.59,
+      "atingida": true
+    },
+    "handshake_p95_ms": {
+      "meta": 300.0,
+      "medido": 7.73,
+      "atingida": true
+    },
+    "ordem_total": {
+      "meta": "OK",
+      "medido": "OK",
+      "atingida": true
+    }
+  }
+}

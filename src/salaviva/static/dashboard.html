@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SalaViva — painel de nós</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="board">
+      <header class="board__head">
+        <div>
+          <h1 class="board__title">Nós do cluster</h1>
+          <p class="board__hint">
+            Cada nó publica um heartbeat a cada 5 s. Um nó sem heartbeat há mais
+            de 15 s some do registro — nenhum outro nó precisa detectar a morte
+            nem notificá-la.
+          </p>
+        </div>
+        <div style="display: flex; gap: 2rem; align-items: flex-end">
+          <div class="readout">
+            <span class="readout__label">Nós vivos</span>
+            <span class="readout__value" id="count" style="font-size: 1.8rem">—</span>
+          </div>
+          <div class="readout">
+            <span class="readout__label">Conexões</span>
+            <span class="readout__value" id="conns" style="font-size: 1.8rem">—</span>
+          </div>
+          <div class="readout">
+            <span class="readout__label">Atualizado</span>
+            <span class="readout__value" id="clock">—</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="grid" id="grid"></section>
+      <p class="empty" id="empty" hidden>Nenhum nó respondendo.</p>
+
+      <h2 class="panel__title" style="margin-top: 2.5rem">Eventos do cluster</h2>
+      <div id="events" style="font-size: 0.8rem; color: var(--ink-dim)">
+        <p style="color: var(--ink-faint)">Aguardando o primeiro ciclo…</p>
+      </div>
+    </main>
+
+    <script>
+      /* Painel de observação usado na demonstração de tolerância a falhas.
+         Consulta /api/nodes a cada 2 s e registra entradas e saídas de nós com
+         horário — é este registro que documenta, na tela, o instante em que a
+         instância foi derrubada e o instante em que o Auto Scaling a repôs. */
+      (() => {
+        "use strict";
+
+        const POLL_MS = 2000;
+        const LOST_LINGER_MS = 20000;
+
+        const grid = document.getElementById("grid");
+        const empty = document.getElementById("empty");
+        const eventsBox = document.getElementById("events");
+
+        const conhecidos = new Map(); // node_id -> {info, lostAt}
+        const eventos = [];
+
+        function trace(id) {
+          let h = 0;
+          for (let i = 0; i < id.length; i += 1) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+          return `var(--trace-${h % 6})`;
+        }
+
+        function agora() {
+          return new Date().toLocaleTimeString("pt-BR");
+        }
+
+        function registrar(texto, critico) {
+          eventos.unshift({ hora: agora(), texto, critico });
+          if (eventos.length > 25) eventos.pop();
+          eventsBox.innerHTML = eventos
+            .map(
+              (e) =>
+                `<p style="margin:.2rem 0;color:${e.critico ? "var(--alert)" : "var(--ink-dim)"}">` +
+                `<span style="color:var(--ink-faint)">${e.hora}</span> &nbsp; ${e.texto}</p>`,
+            )
+            .join("");
+        }
+
+        function esc(s) {
+          const d = document.createElement("div");
+          d.textContent = s ?? "";
+          return d.innerHTML;
+        }
+
+        function cartao(id, info, perdido) {
+          const card = document.createElement("article");
+          card.className = "node" + (perdido ? " is-lost" : "");
+          card.style.setProperty("--trace", trace(id));
+
+          const linhas = perdido
+            ? [["estado", "sem heartbeat"]]
+            : [
+                ["conexões", info.connections],
+                ["salas locais", info.rooms],
+                ["publicadas", info.messages_published],
+                ["entregues", info.messages_delivered],
+                ["lamport", info.lamport],
+                ["uptime", `${Math.round(info.uptime_seconds)} s`],
+              ];
+
+          card.innerHTML =
+            `<p class="node__id">${esc(id)}</p>` +
+            `<dl class="tally">` +
+            linhas
+              .map(([k, v]) => `<dt>${k}</dt><dd>${esc(String(v))}</dd>`)
+              .join("") +
+            `</dl>` +
+            (perdido ? `<p class="node__state">nó perdido</p>` : "");
+          return card;
+        }
+
+        function pintar() {
+          grid.innerHTML = "";
+          const agoraMs = Date.now();
+          let vivos = 0;
+          let conexoes = 0;
+
+          for (const [id, registro] of [...conhecidos.entries()].sort()) {
+            const perdido = registro.lostAt !== null;
+            if (perdido && agoraMs - registro.lostAt > LOST_LINGER_MS) {
+              conhecidos.delete(id);
+              continue;
+            }
+            if (!perdido) {
+              vivos += 1;
+              conexoes += registro.info.connections || 0;
+            }
+            grid.appendChild(cartao(id, registro.info, perdido));
+          }
+
+          document.getElementById("count").textContent = vivos;
+          document.getElementById("conns").textContent = conexoes;
+          document.getElementById("clock").textContent = agora();
+          empty.hidden = conhecidos.size > 0;
+        }
+
+        async function ciclo() {
+          try {
+            const resp = await fetch("/api/nodes", { cache: "no-store" });
+            const dados = await resp.json();
+            const presentes = new Set();
+
+            for (const info of dados.nodes || []) {
+              presentes.add(info.node_id);
+              const anterior = conhecidos.get(info.node_id);
+              if (!anterior) {
+                registrar(`nó <strong>${esc(info.node_id)}</strong> entrou no cluster`, false);
+              } else if (anterior.lostAt !== null) {
+                registrar(`nó <strong>${esc(info.node_id)}</strong> voltou`, false);
+              }
+              conhecidos.set(info.node_id, { info, lostAt: null });
+            }
+
+            for (const [id, registro] of conhecidos) {
+              if (!presentes.has(id) && registro.lostAt === null) {
+                registro.lostAt = Date.now();
+                registrar(
+                  `nó <strong>${esc(id)}</strong> parou de responder — falha detectada`,
+                  true,
+                );
+              }
+            }
+          } catch {
+            registrar("falha ao consultar /api/nodes", true);
+          }
+          pintar();
+        }
+
+        ciclo();
+        setInterval(ciclo, POLL_MS);
+      })();
+    </script>
+  </body>
+</html>

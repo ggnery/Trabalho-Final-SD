@@ -216,3 +216,20 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Terraform -------------------------------------------------------------
+# O state NUNCA deve ser versionado: ele guarda valores resolvidos de recursos,
+# incluindo o segredo JWT lido do SSM. Em equipe, o backend correto é um bucket
+# S3 com DynamoDB para lock (ver infra/terraform/README.md).
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+.terraform.lock.hcl
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

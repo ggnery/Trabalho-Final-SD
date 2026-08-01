@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SalaViva — chat distribuído</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <!-- Entrada -->
+    <main class="gate" id="gate">
+      <div class="gate__card">
+        <p class="gate__mark">Sistemas Distribuídos</p>
+        <h1 class="gate__title">SalaViva</h1>
+        <p class="gate__sub">
+          Chat em salas distribuído por vários nós. Cada mensagem exibe o número
+          de sequência, o relógio de Lamport e o nó que a originou — o trilho à
+          esquerda só permanece contínuo enquanto a ordem estiver íntegra.
+        </p>
+
+        <form id="gate-form" autocomplete="off">
+          <label class="field">
+            <span class="field__label">Seu nome</span>
+            <input
+              class="field__input"
+              id="gate-user"
+              name="user"
+              required
+              maxlength="32"
+              placeholder="ana"
+            />
+          </label>
+          <label class="field">
+            <span class="field__label">Sala inicial</span>
+            <input
+              class="field__input"
+              id="gate-room"
+              name="room"
+              value="geral"
+              maxlength="64"
+              pattern="[\w\-.]+"
+            />
+          </label>
+          <button class="btn" type="submit">Conectar</button>
+          <p class="gate__error" id="gate-error" role="alert"></p>
+        </form>
+      </div>
+    </main>
+
+    <!-- Aplicação -->
+    <div class="shell" id="shell">
+      <header class="instrument">
+        <span class="instrument__brand">SalaViva</span>
+
+        <div class="readout">
+          <span class="readout__label">Você</span>
+          <span class="readout__value" id="rd-user">—</span>
+        </div>
+
+        <div class="readout">
+          <span class="readout__label">Nó que te atende</span>
+          <span class="readout__value readout__value--node" id="rd-node">—</span>
+        </div>
+
+        <div class="readout">
+          <span class="readout__label">Sala</span>
+          <span class="readout__value" id="rd-room">—</span>
+        </div>
+
+        <div class="readout">
+          <span class="readout__label">Último seq</span>
+          <span class="readout__value" id="rd-seq">0</span>
+        </div>
+
+        <div class="readout readout--push">
+          <span class="readout__label">Ordem</span>
+          <span class="seal" id="rd-seal">contígua</span>
+        </div>
+
+        <a class="readout" href="/dashboard" target="_blank" rel="noopener">
+          <span class="readout__label">Cluster</span>
+          <span class="readout__value">painel de nós ↗</span>
+        </a>
+      </header>
+
+      <div class="workspace">
+        <!-- Salas -->
+        <aside class="panel">
+          <h2 class="panel__title">Salas</h2>
+          <ul class="roomlist" id="roomlist"></ul>
+          <form class="roomadd" id="roomadd">
+            <input
+              class="field__input"
+              id="roomadd-input"
+              placeholder="nova-sala"
+              maxlength="64"
+              pattern="[\w\-.]+"
+              aria-label="Nome da nova sala"
+            />
+            <button type="submit" title="Entrar na sala">+</button>
+          </form>
+
+          <h2 class="panel__title">Legenda do trilho</h2>
+          <p style="font-size: 0.72rem; color: var(--ink-faint); line-height: 1.6">
+            A linha vertical é a sequência da sala. Contínua = nenhuma mensagem
+            faltando. A cor de cada ponto identifica o nó de origem — cores
+            diferentes no mesmo trilho significam que a sala está sendo servida
+            por instâncias distintas.
+          </p>
+        </aside>
+
+        <!-- Fluxo de mensagens -->
+        <section class="stream">
+          <div class="log" id="log" aria-live="polite" aria-relevant="additions"></div>
+          <form class="composer" id="composer">
+            <input
+              class="composer__input"
+              id="composer-input"
+              placeholder="Escreva uma mensagem"
+              maxlength="4096"
+              autocomplete="off"
+              aria-label="Mensagem"
+            />
+            <button class="composer__send" type="submit" id="composer-send">
+              Enviar
+            </button>
+          </form>
+        </section>
+
+        <!-- Presença e contadores -->
+        <aside class="panel panel--right">
+          <h2 class="panel__title">Na sala</h2>
+          <ul class="members" id="members"></ul>
+
+          <h2 class="panel__title">Sessão</h2>
+          <dl class="tally">
+            <dt>Recebidas</dt>
+            <dd id="t-recv">0</dd>
+            <dt>Reordenadas</dt>
+            <dd id="t-reord">0</dd>
+            <dt>Duplicatas</dt>
+            <dd id="t-dup">0</dd>
+            <dt>Lacunas</dt>
+            <dd id="t-gap">0</dd>
+            <dt>Reconexões</dt>
+            <dd id="t-recon">0</dd>
+            <dt>Recuperadas</dt>
+            <dd id="t-heal">0</dd>
+          </dl>
+        </aside>
+      </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

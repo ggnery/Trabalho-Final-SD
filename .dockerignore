@@ -1,0 +1,74 @@
+# =============================================================================
+# Contexto de build da imagem do SalaViva.
+#
+# Regra: só entra no contexto o que a imagem precisa — pyproject.toml, uv.lock,
+# README.md (referenciado pelo pyproject) e src/. Todo o resto é ruído que
+# aumenta o upload para o daemon e invalida cache de camada sem motivo.
+# =============================================================================
+
+# Controle de versão e metadados do repositório
+.git
+.gitignore
+.gitattributes
+
+# Ambientes e caches de Python
+.venv
+venv
+env
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+.coverage.*
+htmlcov
+
+# Artefatos que não fazem parte do runtime do nó
+tests
+loadtest
+client
+docs
+slides
+orientacoes
+memory-bank
+.specsmd
+.claude
+infra
+nginx
+scripts
+
+# Docker e ferramentas locais
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+Makefile
+
+# Segredos e configuração local — NUNCA devem entrar na imagem.
+# O segredo do JWT chega por variável de ambiente (Compose) ou SSM Parameter
+# Store (AWS), jamais assado na camada.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform
+.terraform.lock.hcl
+*.tfvars
+
+# Sistema operacional / editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea
+.vscode
+
+# Documentação solta (README.md é reincluído porque o pyproject o referencia)
+*.md
+!README.md

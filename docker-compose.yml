@@ -1,0 +1,254 @@
+# =============================================================================
+# SalaViva — cluster local com paridade de comportamento com a AWS.
+#
+# Correspondência com a arquitetura na nuvem:
+#
+#   nginx (porta 8080)      <->  Application Load Balancer (sticky sessions)
+#   node-a / node-b / node-c<->  3 instâncias EC2 t3.micro no Auto Scaling Group
+#   redis                   <->  ElastiCache for Redis 7 (Pub/Sub + INCR + ZSET)
+#   dynamodb                <->  DynamoDB on-demand (histórico e replay)
+#   restart: unless-stopped <->  Auto Scaling recriando a instância derrubada
+#
+# O ponto que faz este arquivo valer como demonstração de sistema distribuído:
+# os TRÊS nós compartilham o MESMO Redis e não se conhecem entre si. Uma
+# mensagem enviada a node-a chega a um cliente de node-c porque ambos estão
+# inscritos no canal `chat:room:{id}` — nunca porque um nó falou com o outro.
+# Comunicação indireta no sentido estrito: desacoplamento no espaço e no tempo.
+#
+# Subir:      make up          (ou: docker compose up -d --build)
+# Observar:   make watch       (ou: ./scripts/watch_cluster.sh)
+# Derrubar 1: make demo-kill   (ou: ./scripts/kill_node.sh)
+# =============================================================================
+
+name: salaviva
+
+# -----------------------------------------------------------------------------
+# Bloco comum aos três nós. Só o SALAVIVA_NODE_ID e a porta publicada diferem —
+# que é exatamente a diferença entre duas instâncias EC2 do mesmo ASG.
+# -----------------------------------------------------------------------------
+x-node-base: &node-base
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: salaviva:local
+  # Equivalente local ao Auto Scaling Group: o container morto volta sozinho.
+  # É o que permite demonstrar recuperação automática sem AWS.
+  restart: unless-stopped
+  depends_on:
+    redis:
+      condition: service_healthy
+    dynamodb-wait:
+      condition: service_completed_successfully
+  # O health check do Compose aponta para /readyz — o MESMO alvo do ALB — para
+  # que a paridade seja de comportamento e não só de topologia. Um nó sem Redis
+  # reprova aqui, como reprovaria no target group. O HEALTHCHECK da imagem
+  # (liveness, /healthz) tem outro papel e está documentado no Dockerfile.
+  healthcheck:
+    test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/readyz"]
+    interval: 10s
+    timeout: 3s
+    retries: 6
+    start_period: 20s
+  networks:
+    - salaviva
+
+x-node-env: &node-env
+  # --- Coordenação: o mesmo Redis para os três nós. É isto que cruza o Pub/Sub.
+  SALAVIVA_REDIS_URL: "redis://redis:6379/0"
+
+  # --- Persistência: DynamoDB Local. A tabela é criada no boot pelo próprio nó
+  #     (só quando DYNAMO_ENDPOINT_URL está definido); na AWS quem cria é o
+  #     Terraform, porque infraestrutura não deve nascer de código de aplicação.
+  SALAVIVA_PERSISTENCE_ENABLED: "true"
+  SALAVIVA_DYNAMO_ENDPOINT_URL: "http://dynamodb:8000"
+  SALAVIVA_MESSAGES_TABLE: "salaviva_messages"
+  SALAVIVA_ROOMS_TABLE: "salaviva_rooms"
+  SALAVIVA_AWS_REGION: "us-east-1"
+
+  # --- Credenciais falsas: o DynamoDB Local não as valida, mas o botocore
+  #     recusa-se a assinar requisição sem elas. Não há credencial real aqui.
+  AWS_ACCESS_KEY_ID: "local"
+  AWS_SECRET_ACCESS_KEY: "local"
+  AWS_DEFAULT_REGION: "us-east-1"
+
+  # --- Autenticação: segredo de desenvolvimento. Na AWS vem do SSM Parameter
+  #     Store (SecureString), lido no boot pelo instance profile.
+  SALAVIVA_JWT_SECRET: "${SALAVIVA_JWT_SECRET:-dev-secret-trocar-em-producao}"
+
+  SALAVIVA_ENVIRONMENT: "compose"
+  SALAVIVA_PORT: "8000"
+  SALAVIVA_LOG_JSON: "${SALAVIVA_LOG_JSON:-false}"
+  SALAVIVA_LOG_LEVEL: "${SALAVIVA_LOG_LEVEL:-info}"
+
+services:
+  # ---------------------------------------------------------------------------
+  # Redis — o broker Pub/Sub, o sequenciador de ordem total e o registro de
+  # presença/nós. Equivale ao ElastiCache for Redis 7 (ADR-002).
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: salaviva-redis
+    restart: unless-stopped
+    # appendonly ligado de propósito: o contador `chat:seq:{room}` é a fonte da
+    # ordem total. Se o Redis reiniciasse sem AOF, o INCR voltaria a 1 e a
+    # sequência REGREDIRIA — o cliente veria mensagens novas com seq menor que
+    # as já renderizadas. Durabilidade aqui não é sobre dado, é sobre ordem.
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --maxmemory-policy
+      - noeviction
+    volumes:
+      - redis-data:/data
+    ports:
+      # Exposto só no loopback, para inspeção manual durante a apresentação:
+      #   redis-cli -p 6379 GET chat:seq:geral
+      #   redis-cli -p 6379 ZRANGE chat:nodes 0 -1 WITHSCORES
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
+    networks:
+      - salaviva
+
+  # ---------------------------------------------------------------------------
+  # DynamoDB Local — histórico durável e replay de reconexão.
+  # `-sharedDb` faz todas as credenciais/regiões enxergarem a mesma base, senão
+  # cada nó escreveria em um arquivo isolado e o replay veria só as próprias
+  # mensagens. `-inMemory` porque o histórico só precisa sobreviver à morte de
+  # um NÓ (é isso que a demo prova), não à do container do banco.
+  # ---------------------------------------------------------------------------
+  dynamodb:
+    image: amazon/dynamodb-local:2.5.2
+    container_name: salaviva-dynamodb
+    restart: unless-stopped
+    command: ["-jar", "DynamoDBLocal.jar", "-inMemory", "-sharedDb"]
+    ports:
+      # 8009 no host para não colidir com `make standalone`, que ocupa a 8000.
+      - "127.0.0.1:8009:8000"
+    networks:
+      - salaviva
+
+  # ---------------------------------------------------------------------------
+  # Portão de partida do DynamoDB.
+  #
+  # A imagem do DynamoDB Local não traz curl nem healthcheck próprio, então não
+  # há como declarar `condition: service_healthy` sobre ela. Este container
+  # efêmero espera a porta responder e sai com 0; os nós dependem dele por
+  # `service_completed_successfully`.
+  #
+  # Sem esse portão há uma corrida real: o nó sobe, tenta criar a tabela, o
+  # DynamoDB ainda não atende, a falha é engolida (ensure_tables é tolerante por
+  # projeto) e a demo de replay fica sem histórico — justamente o que se quer
+  # provar. É uma corrida que só aparece em máquina rápida, o que a torna pior.
+  #
+  # Reusa a própria imagem da aplicação (já construída, já tem curl) em vez de
+  # baixar uma imagem extra só para esperar. `curl` sem -f é proposital: o
+  # DynamoDB Local responde 400 a um GET / sem assinatura, e 400 já prova que
+  # ele está atendendo. O que interessa distinguir é "responde" de "conexão
+  # recusada".
+  # ---------------------------------------------------------------------------
+  dynamodb-wait:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: salaviva:local
+    container_name: salaviva-dynamodb-wait
+    restart: "no"
+    depends_on:
+      dynamodb:
+        condition: service_started
+    entrypoint: ["sh", "-c"]
+    command:
+      - >
+        echo 'Aguardando o DynamoDB Local responder em dynamodb:8000...' &&
+        timeout 90 sh -c 'until curl -s -o /dev/null http://dynamodb:8000/; do sleep 1; done' &&
+        echo 'DynamoDB Local pronto.'
+    networks:
+      - salaviva
+
+  # ---------------------------------------------------------------------------
+  # Os três nós de aplicação. Contêineres com nome fixo (node-a/b/c) porque
+  # `docker kill node-b` precisa ser digitável ao vivo na apresentação e porque
+  # o node_id derivado do hostname fica legível no painel.
+  # ---------------------------------------------------------------------------
+  node-a:
+    <<: *node-base
+    container_name: node-a
+    hostname: node-a
+    environment:
+      <<: *node-env
+      SALAVIVA_NODE_ID: "node-a"
+    ports:
+      # Acesso direto ao nó, contornando o balanceador. Serve para dois fins na
+      # demo: abrir clientes deliberadamente em nós diferentes (provando o
+      # fan-out entre nós) e consultar /metrics de um nó específico.
+      - "127.0.0.1:8001:8000"
+
+  node-b:
+    <<: *node-base
+    container_name: node-b
+    hostname: node-b
+    environment:
+      <<: *node-env
+      SALAVIVA_NODE_ID: "node-b"
+    ports:
+      - "127.0.0.1:8002:8000"
+
+  node-c:
+    <<: *node-base
+    container_name: node-c
+    hostname: node-c
+    environment:
+      <<: *node-env
+      SALAVIVA_NODE_ID: "node-c"
+    ports:
+      - "127.0.0.1:8003:8000"
+
+  # ---------------------------------------------------------------------------
+  # nginx — o Application Load Balancer local.
+  #
+  # Só sobe depois que os três nós estão *ready* porque o nginx resolve os nomes
+  # do upstream uma única vez, na inicialização: se um nó ainda não existisse no
+  # DNS interno, o nginx recusaria a configuração e não subiria.
+  # ---------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: salaviva-nginx
+    restart: unless-stopped
+    depends_on:
+      node-a:
+        condition: service_healthy
+      node-b:
+        condition: service_healthy
+      node-c:
+        condition: service_healthy
+    ports:
+      # Publicado em todas as interfaces: durante a apresentação é útil abrir o
+      # chat no celular na mesma rede e mostrar dois clientes reais conversando.
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1/nginx-health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - salaviva
+
+networks:
+  salaviva:
+    name: salaviva
+    driver: bridge
+
+volumes:
+  redis-data:
+    name: salaviva-redis-data
