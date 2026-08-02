@@ -10,9 +10,9 @@
 
 **Disciplina:** Sistemas Distribuídos — Projeto Final (Projeto 3)
 
-**Instituição:** {{INSTITUICAO}}
+**Instituição:** Instituto de Informática, Universidade Federal de Goiás
 
-**Professor:** {{PROFESSOR}}
+**Professor:** Iwens Gervasio Sene Junior
 
 **Integrantes:** Gabriel Nery da Silva Espindola (202200509); Giordana de Farias Franco Bueno Bucci (202200513); Gustavo Henrique Valadares (202205539); Carlos Alberto Rodrigues da Silva Junior (202200498); Luiz Felipe Belisário Macedo (202200538)
 
